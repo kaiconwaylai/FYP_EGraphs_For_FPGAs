@@ -1,4 +1,2 @@
-/proj*
-debug/
-target/
-**/*.rs.bk
+proj_*
+*.log

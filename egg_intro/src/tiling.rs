@@ -1,16 +1,14 @@
 use egg::*;
 
-struct Operand {
-    width:Int,
-}
+// struct Operand<const Width: usize>  {
+// }
 
 define_language! {
     enum BitWidthLang {
         Num(i32),
-        Op(Operand),
-
         "+" = Add([Id; 2]),
         "*" = Mul([Id; 2]),
+        "$" = Wdt(Id; 3),
         Symbol(Symbol),
     }
 }
@@ -22,6 +20,7 @@ fn make_rules() -> Vec<Rewrite<BitWidthLang, ()>> {
         rewrite!("add-0"; "(+ ?a 0)" => "?a"),
         rewrite!("mul-0"; "(* ?a 0)" => "0"),
         rewrite!("mul-1"; "(* ?a 1)" => "?a"),
+        rewrite!("tile1"; "(* ($ ?a 31 0) ($ ?b 31 0))" => "(+ (* ($ ?a 31 5) ($ ?b 31 5)) (* ($ ?a 5 0) ($ ?b 5 0)))")
     ]
 }
 
@@ -44,8 +43,14 @@ fn simplify(s: &str) -> String {
     best.to_string()
 }
 
-#[test]
+//#[test]
 fn simple_tests() {
     assert_eq!(simplify("(* 0 42)"), "0");
     assert_eq!(simplify("(+ 0 (* 1 foo))"), "foo");
+    println!("{}",simplify("(* ($ a 31 0) ($ b 31 0))"))
+}
+
+fn main() {
+    println!("Hello, world!");
+    simple_tests();
 }

@@ -1,0 +1,4 @@
+/proj*
+debug/
+target/
+**/*.rs.bk

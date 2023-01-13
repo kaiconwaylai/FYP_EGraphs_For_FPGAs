@@ -1,2 +1,5 @@
 proj_*
 *.log
+**/*.rs.bk
+target
+Cargo.lock

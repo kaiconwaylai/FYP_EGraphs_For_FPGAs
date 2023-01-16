@@ -3,3 +3,4 @@ proj_*
 **/*.rs.bk
 target
 Cargo.lock
+tmp

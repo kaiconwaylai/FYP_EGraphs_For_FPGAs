@@ -1,0 +1,9 @@
+`timescale 1ns / 1ps
+
+module mult(
+    input[${IN1_WIDTH} - 1:0] a,
+    input[${IN2_WIDTH} - 1:0] b,
+    output[${OUT_WIDTH} - 1:0] out
+    );
+    assign out = a*b;
+endmodule

@@ -43,8 +43,12 @@ def plot_data(data):
 def main():
     default_multiply = CodeTemplate("template_code/templates/verilog_mult")
     data = []
+    mySet = {(0,0)}
     for IN2 in [32,64]:
-        for IN1 in [16]:
+        for IN1 in [32,64]:
+            if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
+                continue 
+            mySet.add((IN1, IN2))
             default_multiply.set_variables(IN1_WIDTH = IN1, IN2_WIDTH = IN2, OUT_WIDTH = IN1+IN2)
             default_multiply.write_code('tmp/mult.v')
             run_synthesis()

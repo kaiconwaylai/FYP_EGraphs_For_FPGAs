@@ -7,3 +7,4 @@ tmp
 *.jou
 *.pyc
 env.*
+.Xil

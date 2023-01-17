@@ -4,3 +4,5 @@ proj_*
 target
 Cargo.lock
 tmp
+*.jou
+*.pyc

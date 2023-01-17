@@ -1,0 +1,1 @@
+vivado -mode tcl -source non_proj_script.tcl 

@@ -5,10 +5,11 @@ class CodeTemplate:
     file_path = ""
     variables = {}
     template_code = ""
-    output_code = "default"
+    output_code = ""
 
     def __init__(self, file_path):
         self.file_path = file_path
+        self.read_file()
 
     def read_file(self):
         with open(self.file_path + ".json", 'r') as source:
@@ -33,20 +34,16 @@ class CodeTemplate:
 
 
     def __str__(self):
-        print(self.file_path)
-        print(self.variables)
         print(self.template_code)
-        print(self.output_code)
         return "\n"
 
         
 if __name__ == "__main__":
     myTemplate = CodeTemplate("templates/verilog_mult")
-    myTemplate.read_file()
     myTemplate.set_variables(IN1_WIDTH = 32, IN2_WIDTH = 32, OUT_WIDTH = 64)
     myTemplate.insert_variables()
     print(myTemplate)
-    with open("out.v", 'w') as os:
+    with open("/home/kc319/Documents/FYP_EGraphs_For_FPGAs/vivado/src/mult.v", 'w') as os:
         os.write(myTemplate.output_code)
 
     

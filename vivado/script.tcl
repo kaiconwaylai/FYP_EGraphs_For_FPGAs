@@ -1,7 +1,7 @@
 set PROJECT_NAME              mult_diff_widths
 #set PROJECT_CONSTRAINT_FILE ./fpga_constraint.xdc  no constrain rn
 set DIR_OUTPUT tmp 
-set PART xcvu9p-flga2104-2-i
+set PART partxcu250-figd2104-2L-e
 set FOLDER src
 set FILE_NAME.v mult.v
 

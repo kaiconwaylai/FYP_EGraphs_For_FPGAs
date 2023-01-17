@@ -1,1 +1,1 @@
-vivado -mode tcl -source non_proj_script.tcl 
+vivado -mode tcl -source non_proj_script.tcl -nolog -nojournal

@@ -1,24 +1,59 @@
-import sys
-sys.path.insert(0, '/home/kc319/Documents/FYP_EGraphs_For_FPGAs/python/template_code')
-from CodeTemplate import CodeTemplate
+from template_code.codetemplate import CodeTemplate
 import pandas as pd
+import linecache
+import subprocess
+import numpy as np
+import matplotlib.pyplot as plt
 
-def extract_data():
-    # with open('/home/kc319/Documents/FYP_EGraphs_For_FPGAs/vivado/tmp/synth.rpt', 'r') as rpt:
-    #     report = rpt.read()
-    
-    data = pd.read_fwf('/home/kc319/Documents/FYP_EGraphs_For_FPGAs/vivado/tmp/synth.rpt', delimiter='|')
-    display(data)
+def extract_data(path):
+    lines = [37, 90]
+    rows = []
+    with open(path, 'r') as fp:        
+        for i,line in enumerate(fp):
+        # check line number
+            if i in lines:
+                rows.append(line.strip())
+            elif i > 95:
+                break
+            i += 1
+    LUT_row = rows[0].split('|')
+    DSP_row = rows[1].split('|')
+    return int(LUT_row[2]), int(DSP_row[2])
 
+def run_synthesis():
+    program = "run_tcl.sh"
+    process = subprocess.Popen(['sh', program])
+    process.wait()
 
-# | LUT2     |   47 |                 CLB |
-# | DSP48E2  |    4 |          Arithmetic |
-# | LUT1     |    1 |                 CLB |
+def plot_data(data):
+    fig = plt.figure()
+    ax1 = plt.axes(projection='3d')
+    #ax2 = plt.axes(projection='3d')
+    x = data[:,0]
+    y = data[:,1]
+    z1 = data[:,2]
+    z2 = data[:,3]
+
+    ax1.scatter3D(x, y, z1, c=z1, cmap='Greens')
+    #ax2.plot3D(x, y, z2, 'red')
+
+    plt.show()
+    return 0
 
 def main():
     default_multiply = CodeTemplate("template_code/templates/verilog_mult")
-    print(default_multiply)
-    extract_data()
+    data = []
+    for IN2 in [32,64]:
+        for IN1 in [16]:
+            default_multiply.set_variables(IN1_WIDTH = IN1, IN2_WIDTH = IN2, OUT_WIDTH = IN1+IN2)
+            default_multiply.write_code('tmp/mult.v')
+            run_synthesis()
+            LUTs, DSPs = extract_data('tmp/synth.rpt')
+            data.append([IN1, IN2, LUTs, DSPs])
+
+    data = np.array(data)
+    np.savetxt("data.csv", data, delimiter=",")
+    #plot_data(data)
 
 if __name__ == "__main__":
     main()

@@ -21,17 +21,22 @@ class CodeTemplate:
 
     def set_variables(self, **kwargs):
         for arg in kwargs:
-            if self.variables.has_key(arg):
+            if arg in self.variables:
                 self.variables[arg] = kwargs[arg]
             else:
                 print("{} is not a variable in the template code".format(arg))
+        self.__change_variables()
 
-    def insert_variables(self):
+    def __change_variables(self):
         self.output_code = deepcopy(self.template_code)
         for var in self.variables:
             placeholder = "${" + var + "}"
             self.output_code = self.output_code.replace(placeholder, str(self.variables[var]))
 
+    def write_code(self, path):
+        with open(path, 'w') as dest:
+            dest.write(self.output_code)
+        
 
     def __str__(self):
         print(self.template_code)

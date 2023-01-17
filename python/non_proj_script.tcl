@@ -1,13 +1,13 @@
-set PROJECT_NAME              mult_diff_widths
-#set PROJECT_CONSTRAINT_FILE ./fpga_constraint.xdc  no constrain rn
 set OUTPUT_DIR tmp 
 set PART xcu250-figd2104-2L-e
-set SOURCE src
+set SOURCE tmp
 set FILE_NAME.v mult.v
+
+set_param general.maxBackupLogs 0
 
 file mkdir ${OUTPUT_DIR}
 
-read_verilog [glob ${SOURCE}/*.v]
+read_verilog [glob tmp/mult.v]
 
 synth_design -top MULT -part ${PART}
 

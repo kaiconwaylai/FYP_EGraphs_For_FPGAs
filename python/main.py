@@ -1,5 +1,4 @@
 from template_code.codetemplate import CodeTemplate
-import pandas as pd
 import linecache
 import subprocess
 import numpy as np
@@ -44,8 +43,8 @@ def main():
     default_multiply = CodeTemplate("template_code/templates/verilog_mult")
     data = []
     mySet = {(0,0)}
-    for IN2 in [32,64]:
-        for IN1 in [32,64]:
+    for IN2 in [2,4,8,16,32,64]:
+        for IN1 in [2,4,8,16,32,64]:
             if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
                 continue 
             mySet.add((IN1, IN2))

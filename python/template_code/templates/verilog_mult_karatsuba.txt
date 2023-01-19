@@ -1,0 +1,17 @@
+`timescale 1ns / 1ps
+
+module mult(
+    input[${IN1_WIDTH} - 1:0] a,
+    input[${IN2_WIDTH} - 1:0] b,
+    output[${IN2_WIDTH} + ${IN1_WIDTH} -1:0] out
+    );
+    wire[(${IN1_WIDTH} / 2) - 1 :0] a1 = a[${IN1_WIDTH}-1: ${IN1_WIDTH}/2];
+    wire[(${IN1_WIDTH} / 2) - 1 :0] a0 = a[(${IN1_WIDTH}/2) -1: 0];
+    wire[(${IN2_WIDTH} / 2) - 1 :0] b1 = b[${IN2_WIDTH}-1: ${IN2_WIDTH}/2];
+    wire[(${IN2_WIDTH} / 2) - 1 :0] b0 = b[(${IN2_WIDTH}/2) -1: 0];
+    wire[((${IN2_WIDTH} + ${IN1_WIDTH}) / 2) - 1 :0] z2 = a1 * b1;
+    wire[((${IN2_WIDTH} + ${IN1_WIDTH}) / 2) - 1 :0] z0 = a0 * b0;
+    wire[(${IN2_WIDTH} + ${IN1_WIDTH}) / 2 : 0] z1 = ((a1 + a0) * (b1 + b0)) - z2 - z0;
+
+    assign out = (z2 << ((${IN2_WIDTH} + ${IN1_WIDTH})/2)) + (z1 << ((${IN2_WIDTH} + ${IN1_WIDTH})/4)) + z0;
+endmodule

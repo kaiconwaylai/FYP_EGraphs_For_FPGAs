@@ -1,5 +1,5 @@
 set OUTPUT_DIR tmp 
-set PART xcu250-figd2104-2L-e
+set PART xcvu9p-flga2104-2-i
 set SOURCE tmp
 set FILE_NAME.v mult.v
 
@@ -11,6 +11,6 @@ read_verilog [glob tmp/mult.v]
 
 synth_design -top MULT -part ${PART}
 
-report_utilization -file ${OUTPUT_DIR}/synth.rpt
+report_utilization -file ${OUTPUT_DIR}/synth.xml -format xml
 
 exit

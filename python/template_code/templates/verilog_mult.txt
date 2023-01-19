@@ -3,7 +3,7 @@
 module mult(
     input[${IN1_WIDTH} - 1:0] a,
     input[${IN2_WIDTH} - 1:0] b,
-    output[${OUT_WIDTH} - 1:0] out
+    output[${IN2_WIDTH} + ${IN1_WIDTH} -1:0] out
     );
     assign out = a*b;
 endmodule

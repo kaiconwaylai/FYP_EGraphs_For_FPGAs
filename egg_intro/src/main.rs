@@ -3,19 +3,19 @@ use std::fmt;
 use std::str::FromStr;
 use std::cmp::Ordering;
 
-// pub struct NotAstSize;
-// impl<L: Language> CostFunction<L> for NotAstSize {
-//     type Cost = i32;
-//     fn cost<C>(&mut self, enode: &L, mut costs: C) -> Self::Cost
-//     where
-//         C: FnMut(Id) -> Self::Cost,
-//     {
-//         enode.fold(1, |sum, id| sum + costs(id))
-//     }
-// }
+pub struct NotAstSize;
+impl<L: Language> CostFunction<L> for NotAstSize {
+    type Cost = i32;
+    fn cost<C>(&mut self, enode: &L, mut costs: C) -> Self::Cost
+    where
+        C: FnMut(Id) -> Self::Cost,
+    {
+        enode.fold(1, |sum, id| sum + costs(id))
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
-struct Register{
+struct Register {
     parent:String,
     width:i32,
     msb:i32,
@@ -79,14 +79,9 @@ define_language! {
         Num(i32),
         Reg(Register),
         Symbol(Symbol),
-        "+" = Add([Id; 2]),
-        "*" = Mul([Id; 2]),
-        "+32" = Add32([Id; 2]),
-        "+16" = Add16([Id; 2]),
-        "*32" = Mul32([Id; 2]),
-        "*16" = Mul16([Id; 2]),
-        "&32" = And32([Id; 2]),
-        "&16" = And16([Id; 2]),
+        "+" = Add([Id; 3]),
+        "*" = Mul([Id; 3]),
+
     }
 }
 
@@ -97,8 +92,6 @@ fn make_rules() -> Vec<Rewrite<BitWidthLang, ()>> {
         rewrite!("add-0"; "(+ ?a 0)" => "?a"),
         rewrite!("mul-0"; "(* ?a 0)" => "0"),
         rewrite!("mul-1"; "(* ?a 1)" => "?a"),
-        rewrite!("mul-32"; "(*32 (R ?a) (R ?b))" => "()"),
-
     ]
 }
 

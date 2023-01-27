@@ -5,6 +5,7 @@ define_language! {
         Num(i32),
         "+" = Add([Id; 2]),
         "*" = Mul([Id; 3]),
+        "*64" = Mul64([Id; 2]),
         "-" = Sub([Id; 2]),
         "<<" = Lsl([Id; 2]),
         ">>" = Lsr([Id; 2]),
@@ -14,8 +15,18 @@ define_language! {
 }
 
 
-fn as_str(node: &FPGALang) -> &'static str {
-    return "bar";
+fn get_expr(node: &FPGALang) -> String {
+    if node.is_leaf() {
+        return String::new();
+    }
+
+    let expr = node.to_string();
+    // expr.push_str(" ");
+    // expr.push_str(graph.find(&node.children()[0]).to_string());
+    //expr += " " + node.children()[0].to_string();
+
+    println!("{} ... {}", expr, node.len());
+    return expr;
 }
 
 struct FPGACostFunction;
@@ -25,8 +36,8 @@ impl CostFunction<FPGALang> for FPGACostFunction {
     where
         C: FnMut(Id) -> Self::Cost
     {
-        let op_cost = match as_str(enode) {
-            "* 64" => 99999999.9,
+        let op_cost = match get_expr(enode).as_str() {
+            "*64" => 99999999.9,
             "bar" => 0.7,
             _ => 1.0
         };
@@ -42,7 +53,7 @@ fn make_rules() -> Vec<Rewrite<FPGALang, ()>> {
         rewrite!("add-0"; "(+ ?a 0)" => "?a"),
         rewrite!("mul-0"; "(* ?num ?a 0)" => "0"),
         rewrite!("mul-1"; "(* ?num ?a 1)" => "?a"),
-        rewrite!("karatsuba64";"(* 64 ?a ?b)" => "(+ (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0)))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
+        rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0)))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
     ]
 }
 
@@ -74,10 +85,8 @@ fn simple_tests() {
 fn main() {
     println!("Hello, world!");
     //simple_tests();
-    println!("{}", simplify("* 64 in1 in2"))
+    println!("{}", simplify("(*64 in1 in2)"))
 }
 
 //rewrite!("krt-1"; "(* 64 ?a ?b)" => "(+ (+ (* 32 ?a ?b) (<< 128 (* 32 (>> 32 ?a) (>> 32 ?b))))  (<< 32 (- (* 32 (+ (a)) ()) (+  ) ) )   )"),
-
-
 //(+ (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0)))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))

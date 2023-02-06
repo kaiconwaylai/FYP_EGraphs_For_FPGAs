@@ -3,7 +3,7 @@ proj_*
 **/*.rs.bk
 target
 Cargo.lock
-tmp
+
 *.jou
 *.pyc
 env.*

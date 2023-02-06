@@ -1,8 +1,9 @@
 use egg::*;
 
 define_language! {
-    enum FPGALang {
-        Num(i32),
+    enum BitLanguage {
+        Num(i32),        
+        Symbol(Symbol),
         "+" = Add([Id; 2]),
         "*" = Mul([Id; 3]),
         "*64" = Mul64([Id; 2]),
@@ -11,12 +12,11 @@ define_language! {
         "<<" = Lsl([Id; 2]),
         ">>" = Lsr([Id; 2]),
         "slice" = Slc([Id; 3]),
-        Symbol(Symbol),
     }
 }
 
 
-fn get_expr(node: &FPGALang) -> String {
+fn get_expr(node: &BitLanguage) -> String {
     if node.is_leaf() {
         return String::new();
     }
@@ -30,9 +30,9 @@ fn get_expr(node: &FPGALang) -> String {
 }
 
 struct FPGACostFunction;
-impl CostFunction<FPGALang> for FPGACostFunction {
+impl CostFunction<BitLanguage> for FPGACostFunction {
     type Cost = f64;
-    fn cost<C>(&mut self, enode: &FPGALang, mut costs: C) -> Self::Cost
+    fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
     where
         C: FnMut(Id) -> Self::Cost
     {
@@ -47,7 +47,7 @@ impl CostFunction<FPGALang> for FPGACostFunction {
 }
 
 
-fn make_rules() -> Vec<Rewrite<FPGALang, ()>> {
+fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     vec![
         rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
         rewrite!("commute-mul"; "(* ?num ?a ?b)" => "(* ?num ?b ?a)"),
@@ -62,7 +62,7 @@ fn make_rules() -> Vec<Rewrite<FPGALang, ()>> {
 /// parse an expression, simplify it using egg, and pretty print it back out
 fn simplify(s: &str) -> String {
     // parse the expression, the type annotation tells it which Language to use
-    let expr: RecExpr<FPGALang> = s.parse().unwrap();
+    let expr: RecExpr<BitLanguage> = s.parse().unwrap();
 
     // simplify the expression using a Runner, which creates an e-graph with
     // the given expression and runs the given rules over it

@@ -46,6 +46,9 @@ impl CostFunction<BitLanguage> for FPGACostFunction {
     }
 }
 
+fn var(s: &str) -> Var {
+    s.parse().unwrap()
+}
 
 fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     vec![
@@ -56,6 +59,11 @@ fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
         rewrite!("mul-1"; "(* ?num ?a 1)" => "?a"),
         rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
         rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
+
+        // rw!("karatsuba_expansion"; "(* ?bw ?x ?y)" => {
+        //     KaratsubaExpand {
+        //         bw : var("?bw"),
+        //     }}),
     ]
 }
 
@@ -93,3 +101,44 @@ fn main() {
 
 //rewrite!("krt-1"; "(* 64 ?a ?b)" => "(+ (+ (* 32 ?a ?b) (<< 128 (* 32 (>> 32 ?a) (>> 32 ?b))))  (<< 32 (- (* 32 (+ (a)) ()) (+  ) ) )   )"),
 //(+ (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0)))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))
+
+//-----------------------------------------------------------------------------------
+// DYNAMIC REWRITE CALCULATIONS
+//-----------------------------------------------------------------------------------
+/*
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct KaratsubaExpand {
+    bw: Var,
+}
+
+impl Applier<BitLanguage, ()> for KaratsubaExpand {
+    fn apply_one(
+        &self,
+        egraph: &mut EGraph<BitLanguage, ()>,
+        matched_id: Id,
+        subst: &Subst,
+        _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+        rule_name: Symbol,
+    ) -> Vec<Id> {
+        // Id's of the class containing the operators bitwidth
+        let bw_id = subst.get(self.bw).unwrap();
+
+        // Compute Karasuba String Dynamically 
+        // ...
+        // End Karatsuba Dynamic Computation
+
+        // TODO : fill this in!
+        let karatsuba_sting = String::new(); 
+        let (from, did_something) = egraph.union_instantiations(
+                &"(* ?bw ?x ?y)".parse().unwrap(),
+                &karatsuba_sting.parse().unwrap(),
+                subst,
+                rule_name.clone(),
+            );
+        if did_something {
+            return vec![from];
+        }
+        vec![]
+    }
+}
+*/

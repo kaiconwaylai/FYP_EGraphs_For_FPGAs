@@ -1,5 +1,8 @@
 use egg::*;
 
+#[macro_use]
+extern crate fstrings;
+
 define_language! {
     enum BitLanguage {
         Num(i32),        
@@ -60,10 +63,11 @@ fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
         rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
         rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
 
-        // rw!("karatsuba_expansion"; "(* ?bw ?x ?y)" => {
-        //     KaratsubaExpand {
-        //         bw : var("?bw"),
-        //     }}),
+        rewrite!("karatsuba_expansion"; "(* ?bw ?x ?y)" => {
+            KaratsubaExpand {
+                bw : var("?bw"),
+            }
+        }),
     ]
 }
 
@@ -95,17 +99,29 @@ fn simple_tests() {
 fn main() {
     println!("Hello, world!");
     //simple_tests();
-    println!("{}", simplify("(*64 in1 in2)"));
-    println!("{}", simplify("(*128 in1 in2)"));
+    //println!("{}", simplify("(*64 in1 in2)"));
+    //println!("{}", simplify("(*128 in1 in2)"));
+    let bw_val = 64;
+
+    let half_bw = (bw_val/2).to_string();
+    let xlo = f!("(slice ?x {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+    let ylo = f!("(slice ?y {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+    let xhi = f!("(slice ?x {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+    let yhi = f!("(slice ?y {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+
+    let z0 = f!("(* {half_bw} {xlo} {ylo})");
+    let z2 = f!("(* {half_bw} {xhi} {yhi})");
+    let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
+
+    let karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+    println!("{}", karatsuba_string);
 }
 
-//rewrite!("krt-1"; "(* 64 ?a ?b)" => "(+ (+ (* 32 ?a ?b) (<< 128 (* 32 (>> 32 ?a) (>> 32 ?b))))  (<< 32 (- (* 32 (+ (a)) ()) (+  ) ) )   )"),
-//(+ (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0)))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))
 
 //-----------------------------------------------------------------------------------
 // DYNAMIC REWRITE CALCULATIONS
 //-----------------------------------------------------------------------------------
-/*
+///*
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct KaratsubaExpand {
     bw: Var,
@@ -120,18 +136,39 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
         rule_name: Symbol,
     ) -> Vec<Id> {
-        // Id's of the class containing the operators bitwidth
+        //Id's of the class containing the operators bitwidth
         let bw_id = subst.get(self.bw).unwrap();
-
+        let bw_val = 64;
         // Compute Karasuba String Dynamically 
-        // ...
+        let mut karatsuba_string = String::new(); 
+
+        if bw_val < 16 {
+            karatsuba_string = "(* ?bw ?x ?y)".to_string();
+        } else if bw_val % 2 == 0 {
+
+        } else {
+
+        }
+
+        let half_bw = (bw_val/2).to_string();
+        let xlo = f!("(slice ?x {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+        let ylo = f!("(slice ?y {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+        let xhi = f!("(slice ?x {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+        let yhi = f!("(slice ?y {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+
+        let z0 = f!("(* {half_bw} {xlo} {ylo})");
+        let z2 = f!("(* {half_bw} {xhi} {yhi})");
+        let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
+
+        karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+
+
         // End Karatsuba Dynamic Computation
 
         // TODO : fill this in!
-        let karatsuba_sting = String::new(); 
         let (from, did_something) = egraph.union_instantiations(
                 &"(* ?bw ?x ?y)".parse().unwrap(),
-                &karatsuba_sting.parse().unwrap(),
+                &karatsuba_string.parse().unwrap(),
                 subst,
                 rule_name.clone(),
             );
@@ -141,4 +178,4 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         vec![]
     }
 }
-*/
+//*/

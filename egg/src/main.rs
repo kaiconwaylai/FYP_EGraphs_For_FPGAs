@@ -138,7 +138,9 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
     ) -> Vec<Id> {
         //Id's of the class containing the operators bitwidth
         let bw_id = subst.get(self.bw).unwrap();
-        let bw_val = 64;
+
+        let bw_val = 64; // need to get this value from egraph node ?
+
         // Compute Karasuba String Dynamically 
         let mut karatsuba_string = String::new(); 
 
@@ -162,10 +164,12 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
 
         karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
 
+        //can clean this up + find solution for odd numbers
 
         // End Karatsuba Dynamic Computation
 
         // TODO : fill this in!
+
         let (from, did_something) = egraph.union_instantiations(
                 &"(* ?bw ?x ?y)".parse().unwrap(),
                 &karatsuba_string.parse().unwrap(),

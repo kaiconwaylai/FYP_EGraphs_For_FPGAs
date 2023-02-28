@@ -1,12 +1,12 @@
 use egg::*;
 
+mod fpga;
+
 #[macro_use]
 extern crate fstrings;
 
 define_language! {
     enum BitLanguage {
-        Num(i32),        
-        Symbol(Symbol),
         "+" = Add([Id; 2]),
         "*" = Mul([Id; 3]),
         "*64" = Mul64([Id; 2]),
@@ -15,6 +15,8 @@ define_language! {
         "<<" = Lsl([Id; 2]),
         ">>" = Lsr([Id; 2]),
         "slice" = Slc([Id; 3]),
+        Num(i32),        
+        Symbol(Symbol),
     }
 }
 
@@ -34,16 +36,16 @@ fn get_expr(node: &BitLanguage) -> String {
 
 struct FPGACostFunction;
 impl CostFunction<BitLanguage> for FPGACostFunction {
-    type Cost = f64;
+    type Cost = fpga::Cost;
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
     where
         C: FnMut(Id) -> Self::Cost
     {
         let op_cost = match get_expr(enode).as_str() {
-            "*128" => 9993493493459349.12,
-            "*64" => 99999999.9,
-            "bar" => 0.7,
-            _ => 1.0
+            "*128" => Self::Cost {dsp: 50, lut: 879},
+            "*64" => Self::Cost {dsp: 16, lut: 177},
+            "*" => Self::Cost {dsp: 10, lut: 50},
+            _ => Self::Cost {dsp: 0, lut: 10},
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
     }
@@ -100,7 +102,7 @@ fn main() {
     println!("Hello, world!");
     //simple_tests();
     //println!("{}", simplify("(*64 in1 in2)"));
-    //println!("{}", simplify("(*128 in1 in2)"));
+    println!("{}", simplify("(* 128 in1 in2)"));
     let bw_val = 64;
 
     let half_bw = (bw_val/2).to_string();
@@ -138,31 +140,37 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
     ) -> Vec<Id> {
         //Id's of the class containing the operators bitwidth
         let bw_id = subst.get(self.bw).unwrap();
+        let mut bw_val : i32 = 0; // need to get this value from egraph node ?
 
-        let bw_val = 64; // need to get this value from egraph node ?
+        for node in egraph[*bw_id].nodes.iter() {
+            if let BitLanguage::Num(x) = node {
+                println!("{}", x);
+                bw_val = *x;
+                break;
+            }
+        }
+ 
 
         // Compute Karasuba String Dynamically 
         let mut karatsuba_string = String::new(); 
 
         if bw_val < 16 {
             karatsuba_string = "(* ?bw ?x ?y)".to_string();
-        } else if bw_val % 2 == 0 {
-
         } else {
-
+            let half_bw = (bw_val/2).to_string();
+            let xlo = f!("(slice ?x {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+            let ylo = f!("(slice ?y {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
+            let xhi = f!("(slice ?x {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+            let yhi = f!("(slice ?y {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
+    
+            let z0 = f!("(* {half_bw} {xlo} {ylo})");
+            let z2 = f!("(* {half_bw} {xhi} {yhi})");
+            let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
+    
+            karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
         }
 
-        let half_bw = (bw_val/2).to_string();
-        let xlo = f!("(slice ?x {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
-        let ylo = f!("(slice ?y {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
-        let xhi = f!("(slice ?x {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
-        let yhi = f!("(slice ?y {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
 
-        let z0 = f!("(* {half_bw} {xlo} {ylo})");
-        let z2 = f!("(* {half_bw} {xhi} {yhi})");
-        let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
-
-        karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
 
         //can clean this up + find solution for odd numbers
 

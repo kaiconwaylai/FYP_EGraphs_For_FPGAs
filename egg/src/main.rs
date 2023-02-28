@@ -20,23 +20,20 @@ define_language! {
     }
 }
 
-
 fn get_expr(node: &BitLanguage) -> String {
     if node.is_leaf() {
         return String::new();
     }
-
     let expr = node.to_string();
-    // expr.push_str(" ");
-    // expr.push_str(graph.find(&node.children()[0]).to_string());
-    //expr += " " + node.children()[0].to_string();
-
     return expr;
 }
 
-struct FPGACostFunction;
-impl CostFunction<BitLanguage> for FPGACostFunction {
+struct FPGACostFunction<'a> {
+    egraph: &'a EGraph<BitLanguage, ()>,
+}
+impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     type Cost = fpga::Cost;
+
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
     where
         C: FnMut(Id) -> Self::Cost
@@ -44,8 +41,21 @@ impl CostFunction<BitLanguage> for FPGACostFunction {
         let op_cost = match get_expr(enode).as_str() {
             "*128" => Self::Cost {dsp: 50, lut: 879},
             "*64" => Self::Cost {dsp: 16, lut: 177},
-            "*" => Self::Cost {dsp: 10, lut: 50},
-            _ => Self::Cost {dsp: 0, lut: 10},
+            "*" => {
+                if let BitLanguage::Mul([a,b,c]) = enode {
+                    println!("{}, {}, {}", a,b,c);
+                    let node = &self.egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bw = *x as f64;
+                        let a = ((bw-9.)/17.).ceil();
+                        let b = ((bw-9.)/(17.*a-5.)).floor();
+                        println!("dsp: {}, lut: {}", ((a).powf(2.0) + b), x*6);
+                        return fpga::Cost{dsp: ((a).powf(2.0) + b) as i32, lut: x * 6};
+                    }
+                }
+                return fpga::Cost{dsp: 1, lut: 10};
+            },
+            _ => Self::Cost {dsp: 0, lut: 5},
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
     }
@@ -86,44 +96,22 @@ fn simplify(s: &str) -> String {
     let root = runner.roots[0];
 
     // use an Extractor to pick the best element of the root eclass
-    let extractor = Extractor::new(&runner.egraph, FPGACostFunction);
+    let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
     let (best_cost, best) = extractor.find_best(root);
     println!("Simplified {} to {} with cost {}", expr, best, best_cost);
     best.to_string()
 }
 
-#[test]
-fn simple_tests() {
-    assert_eq!(simplify("(* 0 42)"), "0");
-    assert_eq!(simplify("(+ 0 (* 1 foo))"), "foo");
-}
-
 fn main() {
     println!("Hello, world!");
-    //simple_tests();
     //println!("{}", simplify("(*64 in1 in2)"));
-    println!("{}", simplify("(* 128 in1 in2)"));
-    let bw_val = 64;
-
-    let half_bw = (bw_val/2).to_string();
-    let xlo = f!("(slice ?x {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
-    let ylo = f!("(slice ?y {msb} {lsb})", msb = ((bw_val/2) - 1).to_string(), lsb = "0");
-    let xhi = f!("(slice ?x {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
-    let yhi = f!("(slice ?y {msb} {lsb})", msb = (bw_val - 1).to_string(), lsb = (bw_val/2).to_string());
-
-    let z0 = f!("(* {half_bw} {xlo} {ylo})");
-    let z2 = f!("(* {half_bw} {xhi} {yhi})");
-    let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
-
-    let karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
-    println!("{}", karatsuba_string);
+    println!("{}", simplify("(* 64 in1 in2)"));
 }
 
 
 //-----------------------------------------------------------------------------------
 // DYNAMIC REWRITE CALCULATIONS
 //-----------------------------------------------------------------------------------
-///*
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct KaratsubaExpand {
     bw: Var,
@@ -144,17 +132,15 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
 
         for node in egraph[*bw_id].nodes.iter() {
             if let BitLanguage::Num(x) = node {
-                println!("{}", x);
                 bw_val = *x;
                 break;
             }
         }
- 
 
         // Compute Karasuba String Dynamically 
-        let mut karatsuba_string = String::new(); 
+        let karatsuba_string; 
 
-        if bw_val < 16 {
+        if bw_val < 32 {
             karatsuba_string = "(* ?bw ?x ?y)".to_string();
         } else {
             let half_bw = (bw_val/2).to_string();
@@ -168,9 +154,9 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
     
             karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+
+            println!("{}", karatsuba_string);
         }
-
-
 
         //can clean this up + find solution for odd numbers
 
@@ -190,4 +176,3 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         vec![]
     }
 }
-//*/

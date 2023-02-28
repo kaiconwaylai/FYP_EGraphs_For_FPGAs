@@ -39,8 +39,6 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
         C: FnMut(Id) -> Self::Cost
     {
         let op_cost = match get_expr(enode).as_str() {
-            "*128" => Self::Cost {dsp: 50, lut: 879},
-            "*64" => Self::Cost {dsp: 16, lut: 177},
             "*" => {
                 if let BitLanguage::Mul([a,b,c]) = enode {
                     println!("{}, {}, {}", a,b,c);
@@ -53,7 +51,7 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
                         return fpga::Cost{dsp: ((a).powf(2.0) + b) as i32, lut: x * 6};
                     }
                 }
-                return fpga::Cost{dsp: 1, lut: 10};
+                return fpga::Cost{dsp: 0, lut: 0};
             },
             _ => Self::Cost {dsp: 0, lut: 5},
         };
@@ -85,16 +83,11 @@ fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
 
 /// parse an expression, simplify it using egg, and pretty print it back out
 fn simplify(s: &str) -> String {
-    // parse the expression, the type annotation tells it which Language to use
     let expr: RecExpr<BitLanguage> = s.parse().unwrap();
-
-    // simplify the expression using a Runner, which creates an e-graph with
-    // the given expression and runs the given rules over it
+    // simplify the expression using a Runner, which creates an e-graph with the given expression and runs the given rules over it
     let runner = Runner::default().with_expr(&expr).run(&make_rules());
-
     // the Runner knows which e-class the expression given with `with_expr` is in
     let root = runner.roots[0];
-
     // use an Extractor to pick the best element of the root eclass
     let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
     let (best_cost, best) = extractor.find_best(root);
@@ -104,8 +97,7 @@ fn simplify(s: &str) -> String {
 
 fn main() {
     println!("Hello, world!");
-    //println!("{}", simplify("(*64 in1 in2)"));
-    println!("{}", simplify("(* 64 in1 in2)"));
+    simplify("(* 64 in1 in2)");
 }
 
 

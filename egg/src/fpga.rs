@@ -21,12 +21,10 @@ impl Add for Cost {
 
 impl Ord for Cost {
     fn cmp(&self, other: &Self) -> Ordering  {
-        if self.dsp < other.dsp {
-            return Ordering::Less;
-        } else if self.dsp == other.dsp && self.lut < other.lut {
-            return Ordering::Less;
+        if self.dsp == other.dsp {
+            return self.lut.cmp(&other.lut);
         }
-        return Ordering::Greater;
+        return self.dsp.cmp(&other.dsp);
     }
 }
 

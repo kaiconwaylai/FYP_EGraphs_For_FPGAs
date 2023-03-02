@@ -1,4 +1,5 @@
 use egg::*;
+use std::collections::HashSet;
 
 mod fpga;
 
@@ -20,13 +21,10 @@ define_language! {
     }
 }
 
-fn get_expr(node: &BitLanguage) -> String {
-    if node.is_leaf() {
-        return String::new();
-    }
-    let expr = node.to_string();
-    return expr;
-}
+// fn is_common_expr(seen_exprs: &HashSet, egraph: &EGraph, enode: &BitLanguage) {
+
+//     false;
+// }
 
 struct FPGACostFunction<'a> {
     egraph: &'a EGraph<BitLanguage, ()>,
@@ -38,22 +36,29 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     where
         C: FnMut(Id) -> Self::Cost
     {
-        let op_cost = match get_expr(enode).as_str() {
+        let mut common_expr = HashSet::new();
+        let op_cost = match enode.to_string().as_str() {
             "*" => {
                 if let BitLanguage::Mul([a,b,c]) = enode {
-                    println!("{}, {}, {}", a,b,c);
+
+                    if !common_expr.insert([*a,*b,*c]) {
+                        return fpga::Cost{dsp: 0, lut: 0};
+                    }
+                    println!("inserted {} {} {}", a,b,c);
+
                     let node = &self.egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
-                        let bw = *x as f64;
-                        let a = ((bw-9.)/17.).ceil();
-                        let b = ((bw-9.)/(17.*a-5.)).floor();
-                        println!("dsp: {}, lut: {}", ((a).powf(2.0) + b), x*6);
-                        return fpga::Cost{dsp: ((a).powf(2.0) + b) as i32, lut: x * 6};
+                        let bit_width = *x as f64;
+                        let t1 = ((bit_width-9.)/17.).ceil();
+                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
+                        println!("{}, {}, {}", a,b,c);
+                        println!("dsp: {}, lut: {}", ((t1).powf(2.0) + t2), x*6);
+                        return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: x * 6};
                     }
                 }
                 return fpga::Cost{dsp: 0, lut: 0};
             },
-            _ => Self::Cost {dsp: 0, lut: 5},
+            _ => Self::Cost {dsp: 0, lut: 1},
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
     }
@@ -65,11 +70,8 @@ fn var(s: &str) -> Var {
 
 fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     vec![
-        rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
-        rewrite!("commute-mul"; "(* ?num ?a ?b)" => "(* ?num ?b ?a)"),
-        rewrite!("add-0"; "(+ ?a 0)" => "?a"),
-        rewrite!("mul-0"; "(* ?num ?a 0)" => "0"),
-        rewrite!("mul-1"; "(* ?num ?a 1)" => "?a"),
+        //rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
+        //rewrite!("commute-mul"; "(* ?num ?a ?b)" => "(* ?num ?b ?a)"),
         rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
         rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
 
@@ -81,7 +83,6 @@ fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     ]
 }
 
-/// parse an expression, simplify it using egg, and pretty print it back out
 fn simplify(s: &str) -> String {
     let expr: RecExpr<BitLanguage> = s.parse().unwrap();
     // simplify the expression using a Runner, which creates an e-graph with the given expression and runs the given rules over it
@@ -113,7 +114,7 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
     fn apply_one(
         &self,
         egraph: &mut EGraph<BitLanguage, ()>,
-        matched_id: Id,
+        _matched_id: Id,
         subst: &Subst,
         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
         rule_name: Symbol,
@@ -128,10 +129,8 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
                 break;
             }
         }
-
         // Compute Karasuba String Dynamically 
         let karatsuba_string; 
-
         if bw_val < 32 {
             karatsuba_string = "(* ?bw ?x ?y)".to_string();
         } else {
@@ -146,16 +145,11 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
     
             karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
-
-            println!("{}", karatsuba_string);
         }
 
         //can clean this up + find solution for odd numbers
-
         // End Karatsuba Dynamic Computation
-
         // TODO : fill this in!
-
         let (from, did_something) = egraph.union_instantiations(
                 &"(* ?bw ?x ?y)".parse().unwrap(),
                 &karatsuba_string.parse().unwrap(),
@@ -163,6 +157,7 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
                 rule_name.clone(),
             );
         if did_something {
+            println!("{}", karatsuba_string);
             return vec![from];
         }
         vec![]

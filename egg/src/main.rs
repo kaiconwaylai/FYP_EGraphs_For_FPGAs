@@ -28,7 +28,6 @@ struct FPGACostFunction<'a> {
 }
 impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     type Cost = fpga::Cost;
-
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
     where
         C: FnMut(Id) -> Self::Cost
@@ -36,12 +35,6 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
         let op_cost = match enode.to_string().as_str() {
             "*" => {
                 if let BitLanguage::Mul([a,b,c]) = enode {
-
-                    if !common_expr.insert([*a,*b,*c]) {
-                        return fpga::Cost{dsp: 0, lut: 0};
-                    }
-                    println!("inserted {} {} {}", a,b,c);
-
                     let node = &self.egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
                         let bit_width = *x as f64;
@@ -58,6 +51,28 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
             _ => Self::Cost {dsp: 0, lut: 1},
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
+    }
+}
+
+impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
+    fn node_cost(&mut self, egraph: &EGraph<BitLanguage, ()>, _eclass: Id, enode: &BitLanguage) -> f64
+    {
+        let op_cost = match enode.to_string().as_str() {
+            "*" => {
+                if let BitLanguage::Mul([a,_b,_c]) = enode {
+                    let node = &egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x as f64;
+                        let t1 = ((bit_width-9.)/17.).ceil();
+                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
+                        return (t1).powf(2.0) + t2;
+                    }
+                }
+                return 0.0;
+            },
+            _ => 0.0,
+        };
+        op_cost
     }
 }
 
@@ -87,10 +102,15 @@ fn simplify(s: &str) -> String {
     // the Runner knows which e-class the expression given with `with_expr` is in
     let root = runner.roots[0];
     // use an Extractor to pick the best element of the root eclass
+    let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
+    let best_sol = lp_extractor.solve(root);
+    println!("LP Simplified {} to {}", expr, best_sol);
+
     let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
     let (best_cost, best) = extractor.find_best(root);
     println!("Simplified {} to {} with cost {}", expr, best, best_cost);
-    best.to_string()
+    //best.to_string()
+    "".to_string()
 }
 
 fn main() {

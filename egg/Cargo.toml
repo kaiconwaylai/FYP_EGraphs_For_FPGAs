@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-egg = {version = "0.9.1", features = ["lp"]}
+egg = {version = "0.9.3", features = ["lp"]}
 fstrings = "0.2.3"

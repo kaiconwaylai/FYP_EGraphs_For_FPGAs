@@ -9,6 +9,7 @@ extern crate fstrings;
 define_language! {
     enum BitLanguage {
         "+" = Add([Id; 2]),
+        "+" = Add([Id; 3]),
         "*" = Mul([Id; 3]),
         "*64" = Mul64([Id; 2]),
         "*128" = Mul128([Id; 2]),
@@ -16,15 +17,11 @@ define_language! {
         "<<" = Lsl([Id; 2]),
         ">>" = Lsr([Id; 2]),
         "slice" = Slc([Id; 3]),
+        "concat" = Cct({Id; 2}),
         Num(i32),        
         Symbol(Symbol),
     }
 }
-
-// fn is_common_expr(seen_exprs: &HashSet, egraph: &EGraph, enode: &BitLanguage) {
-
-//     false;
-// }
 
 struct FPGACostFunction<'a> {
     egraph: &'a EGraph<BitLanguage, ()>,
@@ -36,7 +33,6 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     where
         C: FnMut(Id) -> Self::Cost
     {
-        let mut common_expr = HashSet::new();
         let op_cost = match enode.to_string().as_str() {
             "*" => {
                 if let BitLanguage::Mul([a,b,c]) = enode {
@@ -49,6 +45,7 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
                     let node = &self.egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
                         let bit_width = *x as f64;
+                        if bit_width
                         let t1 = ((bit_width-9.)/17.).ceil();
                         let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
                         println!("{}, {}, {}", a,b,c);
@@ -98,9 +95,8 @@ fn simplify(s: &str) -> String {
 
 fn main() {
     println!("Hello, world!");
-    simplify("(* 64 in1 in2)");
+    simplify("(* 128 in1 in2)");
 }
-
 
 //-----------------------------------------------------------------------------------
 // DYNAMIC REWRITE CALCULATIONS
@@ -144,7 +140,9 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let z2 = f!("(* {half_bw} {xhi} {yhi})");
             let z1 = f!("(- (* {mul_bw} (+ {xlo} {xhi}) (+ {ylo} {yhi})) (+ {z2} {z0}))", mul_bw = (bw_val/2 + 1).to_string());
     
-            karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+            //karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+            karatsuba_string = f!("(concat (+ (concat z2 (slice z0 {msb} {half_bw})) z1) (slice z0 {half_z0} 0))", msb = bw_val, half_z0 = half_bw-1);
+
         }
 
         //can clean this up + find solution for odd numbers
@@ -163,3 +161,5 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         vec![]
     }
 }
+
+

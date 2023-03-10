@@ -25,10 +25,10 @@ def run_synthesis():
     process.wait()
 
 def main():
-    default_multiply = CodeTemplate("template_code/templates/verilog_mult_karatsuba")
+    default_multiply = CodeTemplate("template_code/templates/verilog_add")
     data = []
     mySet = {(0,0)}
-    for IN2 in range(115,129):
+    for IN2 in range(1,129):
         for IN1 in [IN2]:
             if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
                 continue 

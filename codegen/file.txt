@@ -1,0 +1,1 @@
+(concat (+ (concat (* 16 (slice in1 31 16) (slice in2 31 16)) (slice (* 16 (slice in1 15 0) (slice in2 15 0)) 31 16)) (- (* 17 (+ (slice in1 15 0) (slice in1 31 16)) (+ (slice in2 15 0) (slice in2 31 16))) (+ (* 16 (slice in1 31 16) (slice in2 31 16)) (* 16 (slice in1 15 0) (slice in2 15 0))))) (slice (* 16 (slice in1 15 0) (slice in2 15 0)) 15 0))

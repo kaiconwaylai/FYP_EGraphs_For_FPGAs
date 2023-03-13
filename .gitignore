@@ -10,3 +10,4 @@ env.*
 .Xil
 __pycache__
 tmp
+*.out

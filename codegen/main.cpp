@@ -5,163 +5,62 @@
 #include <stack>
 #include <memory>
 #include <sstream>
-#include <string>
 
-struct Op {
-public:
-    bool complete = false;
-    int sz = 0;
-    int count = 0;
-    std::unique_ptr<Op> children[3];
-    
-    Op(int size) : sz(size) {};
-    virtual ~Op() {};
-
-    virtual void print(std::ostream& os) const {
-        os << "We have a problem \n";
-    };
-
-    bool addVal(std::unique_ptr<Op>& ptr) {
-        children[count] = std::move(ptr);
-
-        count++;
-        if(count == sz) {
-            complete = true;
-        }
-        return complete;
-    }
-};
-
-struct Slice : Op {
-    Slice() : Op(3) {};
-    ~Slice() = default;
-    void print(std::ostream& os) const override {
-        children[0]->print(os);
-        os << "[";
-        children[1]->print(os);
-        os << ":";
-        children[2]->print(os);
-        os << "]";
-    }
-};
-
-struct Primitive : Op {
-    std::string val = "";
-    Primitive(std::string v) : Op(0), val(v) {}
-    ~Primitive() = default;
-    void print(std::ostream& os) const override {
-        os << val;
-    }
-};
-
-struct Concat : Op {
-    Concat() : Op(2) {};
-    void print(std::ostream& os) const override {
-        os << "{";
-        children[0]->print(os);
-        os << ",";
-        children[1]->print(os);
-        os << "}"; 
-    }
-};
-
-struct Mul : Op {
-    Mul() : Op(3) {};
-    void print(std::ostream& os) const override {
-        os << "(";
-        children[1]->print(os);
-        os << " *";
-        //children[0]->print(os);
-        os << " ";
-        children[2]->print(os);
-        os << ")"; 
-    }
-};
-
-struct Add : Op {
-    Add() : Op(2) {}; 
-    void print(std::ostream& os) const override {
-        os << "(";
-        children[0]->print(os);
-        os << " + ";
-        children[1]->print(os); 
-        os << ")";
-    }
-};
-
-struct Sub : Op {
-    Sub() : Op(2) {}; 
-    void print(std::ostream& os) const override {
-        children[0]->print(os);
-        os << " - ";
-        children[1]->print(os); 
-    }
-};
+#include "operators.hpp"
+#include "helpers.hpp"
 
 void trimParenthesis(std::string& word);
 void squashRanges(std::string& word);
 
 int main() {
-    std::ifstream myfile;
-    myfile.open("file.txt");
+    std::ifstream myFile;
+    myFile.open("file.txt");
     std::unique_ptr<Op> top;
     std::stack<Op*> stk;
     std::string word;
-    while(myfile.good()) {
-        myfile >> word;
+    while(myFile.good()) {
+        myFile >> word;
         trimParenthesis(word);
+        auto newOp = makeOperator(word);
         if(word == "concat") { 
-            auto newOp = std::unique_ptr<Op>(new Concat());
             if(stk.empty()) {
                 stk.push(newOp.get());
                 top = std::move(newOp);
                 continue;
             }
-
             auto ptr = newOp.get();
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
             stk.push(ptr);
-        
         } else if(word == "+") {
-            auto newOp = std::unique_ptr<Op>(new Add());
-
             auto ptr = newOp.get();
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
             stk.push(ptr);
         } else if(word == "*") {
-            auto newOp = std::unique_ptr<Op>(new Mul()); 
-
             auto ptr = newOp.get();
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
             stk.push(ptr);
         } else if(word == "slice") {
-            auto newOp = std::unique_ptr<Op>(new Slice());
-
             auto ptr = newOp.get();
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
             stk.push(ptr);
         } else if(word == "-") {
-            auto newOp = std::unique_ptr<Op>(new Sub());
-
             auto ptr = newOp.get();
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
             stk.push(ptr);
         } else {
-            auto newOp = std::unique_ptr<Op>(new Primitive(word));
             if(stk.top()->addVal(newOp)) {
                 stk.pop();
             }
-
         }
     }
     std::stringstream ss;

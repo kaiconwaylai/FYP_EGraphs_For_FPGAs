@@ -11,3 +11,5 @@ env.*
 __pycache__
 tmp
 *.out
+.vscode
+*.exe

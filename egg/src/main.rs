@@ -14,8 +14,6 @@ define_language! {
         "*128" = Mul128([Id; 2]),
         "-" = Sub([Id; 2]),
         "-" = SubW([Id; 3]),
-        "<<" = Lsl([Id; 2]),
-        ">>" = Lsr([Id; 2]),
         "slice" = Slc([Id; 3]),
         "concat" = Cct([Id; 2]),
         Num(i32),        

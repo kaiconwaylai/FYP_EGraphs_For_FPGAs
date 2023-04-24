@@ -13,55 +13,33 @@ void trimParenthesis(std::string& word);
 void squashRanges(std::string& word);
 
 int main() {
+    std::cout << "inside main \n";
     std::ifstream myFile;
     myFile.open("file.txt");
+    std::cout << "open file \n";
     std::unique_ptr<Op> top;
     std::stack<Op*> stk;
     std::string word;
     while(myFile.good()) {
         myFile >> word;
+        std::cout << word << "\n";
         trimParenthesis(word);
         auto newOp = makeOperator(word);
-        if(word == "concat") { 
-            if(stk.empty()) {
-                stk.push(newOp.get());
-                top = std::move(newOp);
-                continue;
-            }
-            auto ptr = newOp.get();
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
+        auto ptr = newOp.get();
+        
+        if(stk.empty()) {
             stk.push(ptr);
-        } else if(word == "+") {
-            auto ptr = newOp.get();
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
-            stk.push(ptr);
-        } else if(word == "*") {
-            auto ptr = newOp.get();
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
-            stk.push(ptr);
-        } else if(word == "slice") {
-            auto ptr = newOp.get();
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
-            stk.push(ptr);
-        } else if(word == "-") {
-            auto ptr = newOp.get();
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
-            stk.push(ptr);
-        } else {
-            if(stk.top()->addVal(newOp)) {
-                stk.pop();
-            }
+            top = std::move(newOp);
+            continue;
         }
+
+        if(stk.top()->addVal(newOp)) {
+            stk.pop();
+        }
+        if(ptr->sz > 1) { 
+            stk.push(ptr);
+        }
+
     }
     std::stringstream ss;
     top->print(ss);

@@ -1,10 +1,10 @@
-C++ Testbench for the mult.v module using the Xilinx Simulator Interface (XSI).
+C++ Testbench for the mult.v module using the Xilinx Simulator Interface (XSI). 
 Runs on windows using the run.bat file on linux use run.csh. (Need to change PATHs to point to install location / use set_env.csh).
 
 Need to implement a way to tell multiplierTestbench.cpp the verilog input / output widths (will prob use a cmdline argument).
 
-
-
+This is based on the example provided with Xilinx.
+https://github.com/gsmecher/pyxsi/blob/master/src/pybind.cpp was useful for inspiration.
 
 Original Instructions:
 

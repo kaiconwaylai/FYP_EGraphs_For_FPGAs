@@ -6,8 +6,8 @@
 #include <memory>
 #include <sstream>
 
-#include "operators.hpp"
-#include "helpers.hpp"
+#include "./include/operators.hpp"
+#include "./include/helpers.hpp"
 
 void trimParenthesis(std::string& word);
 void squashRanges(std::string& word);
@@ -24,11 +24,11 @@ int main() {
         myFile >> word;
         std::cout << word << "\n";
         trimParenthesis(word);
-        auto newOp = makeOperator(word);
-        auto ptr = newOp.get();
+        auto newOp = Op::makeOperator(word);
+        auto op = newOp.get();
         
         if(stk.empty()) {
-            stk.push(ptr);
+            stk.push(op);
             top = std::move(newOp);
             continue;
         }
@@ -36,8 +36,8 @@ int main() {
         if(stk.top()->addVal(newOp)) {
             stk.pop();
         }
-        if(ptr->sz > 1) { 
-            stk.push(ptr);
+        if(op->sz > 1) { 
+            stk.push(op);
         }
 
     }

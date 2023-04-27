@@ -15,6 +15,8 @@ public:
     Op(int size) : sz(size) {};
     virtual ~Op() {};
 
+    static std::unique_ptr<Op> makeOperator(std::string op);
+
     virtual void print(std::ostream& os) const {
         os << "We have a problem \n";
     };
@@ -95,3 +97,15 @@ struct Sub : Op {
         children[1]->print(os); 
     }
 };
+
+
+enum class Operator {
+    CONCAT,
+    ADD,
+    MUL,
+    SUB,
+    SLICE,
+    PRIMITIVE
+};
+
+

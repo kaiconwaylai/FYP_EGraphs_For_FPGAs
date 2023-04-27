@@ -1,27 +1,8 @@
-#pragma once
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <stack>
-#include <memory>
-#include <sstream>
 #include <unordered_map>
 
-#include "operators.hpp"
+#include "../include/operators.hpp"
 
-enum class Operator {
-    CONCAT,
-    ADD,
-    MUL,
-    SUB,
-    SLICE,
-    PRIMITIVE
-};
-
-
-std::unique_ptr<Op> makeOperator(std::string op) {
+std::unique_ptr<Op> Op::makeOperator(std::string op) {
     const std::unordered_map<std::string, Operator> stringToOperator = {{"concat", Operator::CONCAT}, {"+", Operator::ADD},{"*", Operator::MUL}, {"-", Operator::SUB}, {"slice", Operator::SLICE}};
     auto iter = stringToOperator.find(op);
     if (iter != stringToOperator.end()) {

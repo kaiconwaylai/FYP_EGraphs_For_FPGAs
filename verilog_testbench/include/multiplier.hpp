@@ -5,7 +5,11 @@
 #include <string>
 
 std::string logicShiftLeft(const std::string& in, unsigned shift) {
-    return in.substr(in.find('1')) + std::string(shift,'0');
+    auto firstOne = in.find('1');
+    if(firstOne == std::string::npos) {
+        return "0";
+    }
+    return in.substr() + std::string(shift,'0');
 } 
 
 std::string binaryAdd(std::string out, std::string in) {

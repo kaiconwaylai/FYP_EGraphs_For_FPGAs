@@ -15,7 +15,7 @@ void squashRanges(std::string& word);
 int main() {
     std::cout << "inside main \n";
     std::ifstream myFile;
-    myFile.open("file.txt");
+    myFile.open("eggOutput.txt");
     std::cout << "open file \n";
     std::unique_ptr<Op> top;
     std::stack<Op*> stk;

@@ -2,7 +2,7 @@
 
 #include "../include/operators.hpp"
 
-std::unique_ptr<Op> Op::makeOperator(std::string op) {
+std::unique_ptr<Op> Op::makeOperator(const std::string& op) {
     const std::unordered_map<std::string, Operator> stringToOperator = {{"concat", Operator::CONCAT}, {"+", Operator::ADD},{"*", Operator::MUL}, {"-", Operator::SUB}, {"slice", Operator::SLICE}};
     auto iter = stringToOperator.find(op);
     if (iter != stringToOperator.end()) {

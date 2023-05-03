@@ -26,6 +26,7 @@ define_language! {
 struct FPGACostFunction<'a> {
     egraph: &'a EGraph<BitLanguage, ()>,
 }
+
 impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     type Cost = fpga::Cost;
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
@@ -83,8 +84,8 @@ fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     vec![
         //rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
         //rewrite!("commute-mul"; "(* ?num ?a ?b)" => "(* ?num ?b ?a)"),
-        rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
-        rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
+        //rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
+        //rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
 
         rewrite!("karatsuba_expansion"; "(* ?bw ?x ?y)" => {
             KaratsubaExpand {
@@ -100,22 +101,22 @@ fn simplify(s: &str) -> String {
     let runner = Runner::default().with_expr(&expr).run(&make_rules());
     // the Runner knows which e-class the expression given with `with_expr` is in
     let root = runner.roots[0];
+
     // use an Extractor to pick the best element of the root eclass
-    let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
-    let best_sol = lp_extractor.solve(root);
-    println!("LP Simplified {} to {}", expr, best_sol);
-
-    // let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
-    // let (best_cost, best) = extractor.find_best(root);
-    // println!("Simplified {} to {} with cost {}", expr, best, best_cost);
-    //best.to_string()
-    "".to_string()
+    
+    if true {
+        let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
+        let best_sol = lp_extractor.solve(root);
+        println!("LP Simplified {} to {}", expr, best_sol);
+    } else {
+        let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
+        let (best_cost, best) = extractor.find_best(root);
+        println!("Simplified {} to {} with cost {}", expr, best, best_cost);
+        return best.to_string();
+    }
+    return "".to_string();
 }
 
-fn main() {
-    println!("Hello, world!");
-    simplify("(* 32 in1 in2)");
-}
 
 //-----------------------------------------------------------------------------------
 // DYNAMIC REWRITE CALCULATIONS
@@ -149,33 +150,32 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         if bw_val < 32 {
             karatsuba_string = String::from("(* ?bw ?x ?y)");
         } else {
-            let mut msb = ((bw_val/2)-1).to_string();
-            let mut lsb = String::from("0");
+            let msb = ((bw_val/2)-1).to_string();
+            let lsb = String::from("0");
             let xlo = f!("(slice ?x {msb} {lsb})");
             let ylo = f!("(slice ?y {msb} {lsb})");
-            msb = (bw_val-1).to_string();
-            lsb = (bw_val/2).to_string();
+            let msb = (bw_val-1).to_string();
+            let lsb = (bw_val/2).to_string();
             let xhi = f!("(slice ?x {msb} {lsb})");
             let yhi = f!("(slice ?y {msb} {lsb})");
-
+            
             let half_bw = (bw_val/2).to_string();
             let z0 = f!("(* {half_bw} {xlo} {ylo})");
             let z2 = f!("(* {half_bw} {xhi} {yhi})");
             let z1 = f!("(- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) (+ {add_width_2} {z2} {z0}))", mul_bw = bw_val/2 + 1, sub_width = bw_val+1, add_width = half_bw, add_width_2 = bw_val);
-    
-            //karatsuba_string = f!("(+ (<< {bw} {z2}) (+ {z0} (<< {half_bw} {z1})))", bw = bw_val.to_string());
+            
             karatsuba_string = f!("(concat (+ {add_width} (concat {z2} (slice {z0} {msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", msb = bw_val-1, half_z0 = (bw_val/2)-1, add_width = bw_val * 3/2);
         }
-
+        
         //can clean this up + find solution for odd numbers
         // End Karatsuba Dynamic Computation
         // TODO : fill this in!
         let (from, did_something) = egraph.union_instantiations(
-                &"(* ?bw ?x ?y)".parse().unwrap(),
-                &karatsuba_string.parse().unwrap(),
-                subst,
-                rule_name.clone(),
-            );
+            &"(* ?bw ?x ?y)".parse().unwrap(),
+            &karatsuba_string.parse().unwrap(),
+            subst,
+            rule_name.clone(),
+        );
         if did_something {
             println!("{}", karatsuba_string);
             return vec![from];
@@ -183,7 +183,11 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         vec![]
     }
 }
+// END
 
-
+fn main() {
+    println!("Hello, world!");
+    simplify("(* 64 in1 in2)");
+}
 
 

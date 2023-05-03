@@ -15,7 +15,7 @@ public:
     Op(int size) : sz(size) {};
     virtual ~Op() {};
 
-    static std::unique_ptr<Op> makeOperator(std::string op);
+    static std::unique_ptr<Op> makeOperator(const std::string& op);
 
     virtual void print(std::ostream& os) const {
         os << "We have a problem \n";
@@ -23,13 +23,14 @@ public:
 
     bool addVal(std::unique_ptr<Op>& ptr) {
         children[count] = std::move(ptr);
-
         count++;
         if(count == sz) {
             complete = true;
         }
         return complete;
     }
+
+    int getSize() const {return sz;};
 };
 
 struct Slice : Op {
@@ -79,22 +80,22 @@ struct Mul : Op {
 };
 
 struct Add : Op {
-    Add() : Op(2) {}; 
+    Add() : Op(3) {}; 
     void print(std::ostream& os) const override {
         os << "(";
-        children[0]->print(os);
+        children[1]->print(os);
         os << " + ";
-        children[1]->print(os); 
+        children[2]->print(os); 
         os << ")";
     }
 };
 
 struct Sub : Op {
-    Sub() : Op(2) {}; 
+    Sub() : Op(3) {}; 
     void print(std::ostream& os) const override {
-        children[0]->print(os);
+        children[1]->print(os);
         os << " - ";
-        children[1]->print(os); 
+        children[2]->print(os); 
     }
 };
 

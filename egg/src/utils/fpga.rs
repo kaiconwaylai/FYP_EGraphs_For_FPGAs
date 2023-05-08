@@ -33,4 +33,3 @@ impl fmt::Display for Cost {
         write!(f, "(dsps: {}, luts: {})", self.dsp, self.lut)
     }
 }
-

@@ -1,9 +1,15 @@
 use egg::*;
+use std::fs;
+use std::io::prelude::*;
 
-mod fpga;
+
+mod utils;
+use utils::{fpga,costs::*};
 
 #[macro_use]
 extern crate fstrings;
+
+
 
 define_language! {
     enum BitLanguage {
@@ -23,58 +29,6 @@ define_language! {
     }
 }
 
-struct FPGACostFunction<'a> {
-    egraph: &'a EGraph<BitLanguage, ()>,
-}
-
-impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
-    type Cost = fpga::Cost;
-    fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
-    where
-        C: FnMut(Id) -> Self::Cost
-    {
-        let op_cost = match enode.to_string().as_str() {
-            "*" => {
-                if let BitLanguage::Mul([a,b,c]) = enode {
-                    let node = &self.egraph[*a].nodes[0];
-                    if let BitLanguage::Num(x) = node {
-                        let bit_width = *x as f64;
-                        let t1 = ((bit_width-9.)/17.).ceil();
-                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
-                        println!("{}, {}, {}", a,b,c);
-                        println!("dsp: {}, lut: {}", ((t1).powf(2.0) + t2), x*6);
-                        return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: x * 6};
-                    }
-                }
-                return fpga::Cost{dsp: 0, lut: 0};
-            },
-            _ => Self::Cost {dsp: 0, lut: 1},
-        };
-        enode.fold(op_cost, |sum, id| sum + costs(id))
-    }
-}
-
-impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
-    fn node_cost(&mut self, egraph: &EGraph<BitLanguage, ()>, _eclass: Id, enode: &BitLanguage) -> f64
-    {
-        let op_cost = match enode.to_string().as_str() {
-            "*" => {
-                if let BitLanguage::Mul([a,_b,_c]) = enode {
-                    let node = &egraph[*a].nodes[0];
-                    if let BitLanguage::Num(x) = node {
-                        let bit_width = *x as f64;
-                        let t1 = ((bit_width-9.)/17.).ceil();
-                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
-                        return (t1).powf(2.0) + t2;
-                    }
-                }
-                return 0.0;
-            },
-            _ => 0.0,
-        };
-        op_cost
-    }
-}
 
 fn var(s: &str) -> Var {
     s.parse().unwrap()
@@ -108,13 +62,13 @@ fn simplify(s: &str) -> String {
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
         let best_sol = lp_extractor.solve(root);
         println!("LP Simplified {} to {}", expr, best_sol);
+        return best_sol.to_string();
     } else {
         let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
         let (best_cost, best) = extractor.find_best(root);
         println!("Simplified {} to {} with cost {}", expr, best, best_cost);
         return best.to_string();
     }
-    return "".to_string();
 }
 
 
@@ -185,9 +139,89 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
 }
 // END
 
-fn main() {
+fn main() -> std::io::Result<()> {
     println!("Hello, world!");
-    simplify("(* 64 in1 in2)");
+    let input = "(* 2048 IN1 IN2)";
+    let result = simplify(input);
+    let mut dst = fs::File::create("results.txt")?;
+
+    for i in 0..11 {
+        let i = i as f64/10.0;
+        alpha(i);
+        let result = simplify(input);
+        write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
+    }
+
+    Ok(())
 }
 
 
+struct FPGACostFunction<'a> {
+    egraph: &'a EGraph<BitLanguage, ()>,
+}
+
+impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
+    type Cost = fpga::Cost;
+    fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
+    where
+        C: FnMut(Id) -> Self::Cost
+    {
+        let op_cost = match enode.to_string().as_str() {
+            "*" => {
+                if let BitLanguage::Mul([a,_b,_c]) = enode {
+                    let node = &self.egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x as f64;
+                        let t1 = ((bit_width-9.)/17.).ceil();
+                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
+                        return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: x * 6};
+                    }
+                }
+                return fpga::Cost{dsp: 0, lut: 0};
+            },
+            _ => Self::Cost {dsp: 0, lut: 1},
+        };
+        enode.fold(op_cost, |sum, id| sum + costs(id))
+    }
+}
+
+impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
+    fn node_cost(&mut self, egraph: &EGraph<BitLanguage, ()>, _eclass: Id, enode: &BitLanguage) -> f64
+    {
+        let op_cost = match enode.to_string().as_str() {
+            "*" => {
+                if let BitLanguage::Mul([a,_b,_c]) = enode {
+                    let node = &egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        //let bit_width = *x as f64;
+                        let cost = mul_cost(*x);
+                        return (1.0-alpha(-1.0)) * cost.dsp as f64 + alpha(-1.0) * cost.lut as f64;
+                    }
+                }
+                0.0
+            },
+            "-" => {
+                if let BitLanguage::AddW([a,_b,_c]) = enode {
+                    let node = &egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x as f64;
+                        return bit_width * alpha(-1.0);
+                    }
+                }
+                0.0
+            }
+            "+" => {
+                if let BitLanguage::SubW([a,_b,_c]) = enode {
+                    let node = &egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x as f64;
+                        return bit_width * alpha(-1.0);
+                    }
+                }
+                0.0
+            }
+            _ => 0.0,
+        };
+        op_cost
+    }
+}

@@ -24,12 +24,12 @@ void Input::setValue(unsigned val) {
     sendValue();
 }
 
-void Input::setValue(std::string val) {
+void Input::setValue(const std::string& val) {
     if(val.length() - val.find("1") > width) {
         throw "Attempt to assign too large a value to input";
     }
 
-    for(const char& c : val) {
+    for(const char c : val) {
         if(c != '0' && c != '1') {
             throw "Invalid input number";
         }

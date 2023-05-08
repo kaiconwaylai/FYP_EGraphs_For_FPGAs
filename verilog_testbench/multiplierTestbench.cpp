@@ -14,10 +14,9 @@ std::string getcurrentdir();
 
 int main(int argc, char **argv) {
 
-   unsigned IN1_WIDTH = 22;
-   unsigned IN2_WIDTH = 34;
-   unsigned OUTPUT_WIDTH = 56;
-
+   const unsigned IN1_WIDTH = 32;
+   const unsigned IN2_WIDTH = 32;
+   const unsigned OUTPUT_WIDTH = 64;
 
    auto cwd = getcurrentdir();
    std::string simengine_libname = "librdi_simulator_kernel";
@@ -36,7 +35,6 @@ int main(int argc, char **argv) {
    std::cout << "Design DLL     : " << design_libname << std::endl;
    std::cout << "Sim Engine DLL : " << simengine_libname << std::endl;
 
-   // my variables
    int status = 0;
    auto testCases = standardiseUnitTests(OUTPUT_WIDTH);
    unsigned testsCompleted = 0;
@@ -56,23 +54,7 @@ int main(int argc, char **argv) {
       Input IN2("IN2", IN2_WIDTH, &XSI);
       Output OUTPUT("OUTPUT", OUTPUT_WIDTH, &XSI);
 
-      // Start low clock
-      XSI.run(10);
-
-      // The reset is done. Now start counting
       std::cout << "\n *** START TESTING ***\n";
-
-      // std::cout << "At testcase: " << testcase.IN1 << std::endl;
-      IN1.setValue("1000101010101010101");
-      IN2.setValue("0");
-      auto expected = multiply(IN1, IN2);
-      std::cout << "After multiply \n";
-      XSI.run(10);
-      OUTPUT.getValue();
-
-      std::cout << IN1 << IN2;
-      std::cout << "Expected: " << expected << '\n';
-      std::cout << OUTPUT;
 
       for(const auto& testcase : testCases) {
          IN1.setValue(testcase.IN1);
@@ -81,8 +63,7 @@ int main(int argc, char **argv) {
          auto res = OUTPUT.getValue();
          if(res != testcase.EXPECTED) {
             std::cout << "TEST FAILED \n";
-            std::cout << IN1 << IN2;
-            std::cout << OUTPUT;
+            std::cout << IN1 << IN2 << OUTPUT;
             std::cout << "Expected: " << testcase.EXPECTED << '\n';
             testsPassed--;
          }
@@ -97,8 +78,7 @@ int main(int argc, char **argv) {
          auto res = OUTPUT.getValue();
          if(res != expected) {
             std::cout << "TEST FAILED \n";
-            std::cout << IN1 << IN2;
-            std::cout << OUTPUT;
+            std::cout << IN1 << IN2 << OUTPUT;
             std::cout << "Expected: " << expected << '\n';
             testsPassed--;
          }
@@ -106,7 +86,7 @@ int main(int argc, char **argv) {
       }
 
       std::cout << "\n *** END TESTING ***\n";
-      // Just a check to rewind time to 0
+
       XSI.restart();
    }
    catch (std::exception &e) {
@@ -126,7 +106,6 @@ int main(int argc, char **argv) {
 
    exit(status);
 }
-
 
 std::string getcurrentdir() {
 #if defined(_WIN32)

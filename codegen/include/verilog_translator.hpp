@@ -1,7 +1,7 @@
 #include <iostream>
+#include <string>
 
 void printModuleBody(std::ostream& os);
-
 
 void printModule(std::ostream& os, unsigned IN1_WIDTH, unsigned IN2_WIDTH, unsigned OUTPUT_WIDTH) {
 
@@ -12,3 +12,11 @@ void printModule(std::ostream& os, unsigned IN1_WIDTH, unsigned IN2_WIDTH, unsig
 
     os << "endmodule\n";
 };
+
+
+std::string simplifyExpression(std::string expression) {
+
+    
+
+
+}

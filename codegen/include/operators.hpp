@@ -11,8 +11,10 @@ public:
     int sz = 0;
     int count = 0;
     std::unique_ptr<Op> children[3];
+    static inline int instanceCounter = 0;
+    int id;
     
-    Op(int size) : sz(size) {};
+    Op(int size) : sz(size), id(instanceCounter++) {};
     virtual ~Op() {};
 
     static std::unique_ptr<Op> makeOperator(const std::string& op);
@@ -30,6 +32,7 @@ public:
         return complete;
     }
 
+    virtual std::string val() const {return "";};
     int getSize() const {return sz;};
 };
 
@@ -44,14 +47,20 @@ struct Slice : Op {
         children[2]->print(os);
         os << "]";
     }
+    std::string val() const {
+        return "slc" + children[0]->val() + children[1]->val() + children[2]->val();
+    }
 };
 
 struct Primitive : Op {
-    std::string val = "";
-    Primitive(std::string v) : Op(0), val(v) {}
+    std::string value = "";
+    Primitive(std::string v) : Op(0), value(v) {}
     ~Primitive() = default;
     void print(std::ostream& os) const override {
-        os << val;
+        os << value;
+    }
+    std::string val() const {
+        return value;
     }
 };
 
@@ -63,6 +72,9 @@ struct Concat : Op {
         os << ",";
         children[1]->print(os);
         os << "}"; 
+    }
+    std::string val() const {
+        return "cct" + children[0]->val() + children[1]->val();
     }
 };
 
@@ -77,6 +89,9 @@ struct Mul : Op {
         children[2]->print(os);
         os << ")"; 
     }
+    std::string val() const {
+        return "mul" + children[0]->val() + children[1]->val() + children[2]->val();
+    }
 };
 
 struct Add : Op {
@@ -88,6 +103,9 @@ struct Add : Op {
         children[2]->print(os); 
         os << ")";
     }
+    std::string val() const {
+        return "add" + children[0]->val() + children[1]->val() + children[2]->val();
+    }
 };
 
 struct Sub : Op {
@@ -96,6 +114,9 @@ struct Sub : Op {
         children[1]->print(os);
         os << " - ";
         children[2]->print(os); 
+    }
+    std::string val() const {
+        return "sub" + children[0]->val() + children[1]->val() + children[2]->val();
     }
 };
 

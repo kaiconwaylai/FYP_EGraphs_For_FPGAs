@@ -85,3 +85,29 @@ void squashRanges(std::string& word) {
         }
     }
 }
+
+std::string inorder(Op* node, std::unordered_map<std::string, int>& m)
+{
+    if (!node)
+        return "";
+ 
+    std::string str = "(";
+    str += node->val();
+    for(int i = 0; i < node->sz; i++) {
+        str += inorder(node->children[i].get(), m);
+    }
+    str += ")";
+ 
+    if (m[str] == 1)
+        std::cout << node->val() << " ";
+    m[str]++;
+ 
+    return str;
+}
+ 
+// Wrapper over inorder()
+void printAllDups(Op* root)
+{
+    std::unordered_map<std::string, int> m;
+    inorder(root, m);
+}

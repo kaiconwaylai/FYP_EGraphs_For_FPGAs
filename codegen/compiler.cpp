@@ -5,13 +5,16 @@
 #include <stack>
 #include <memory>
 #include <sstream>
-#include <unordered_map>
 
 #include "./include/operators.hpp"
 #include "./include/helpers.hpp"
 
+void trimParenthesis(std::string& word);
+void squashRanges(std::string& word);
+
 int main() {
-    std::ifstream myFile("eggOutput.txt");
+    std::ifstream myFile;
+    myFile.open("eggOutput.txt");
 
     std::unique_ptr<Op> top;
     std::stack<Op*> stk;
@@ -37,9 +40,6 @@ int main() {
         }
 
     }
-    myFile.close();
-    
-    printAllDups(top.get());
     std::stringstream ss;
     top->print(ss);
     std::string output = ss.str();

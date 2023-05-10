@@ -2,11 +2,9 @@ use egg::*;
 use std::fs;
 use std::io::prelude::*;
 
-
 mod utils;
-mod lang;
-use utils::{fpga,costs::*};
-use lang::*;
+use utils::{language::*,costs::*};
+
 
 #[macro_use]
 extern crate fstrings;
@@ -37,15 +35,15 @@ fn main() -> std::io::Result<()> {
     println!("Hello, world!");
     generate_verilog("(+ 32 IN1 IN2)".to_string(), 32);
     let input = "(* 32 IN1 IN2)";
-    //let result = simplify(input);
-    // let mut dst = fs::File::create("results.txt")?;
+    let result = simplify(input);
+    let mut dst = fs::File::create("results.txt")?;
 
-    // for i in 0..11 {
-    //     let i = i as f64/10.0;
-    //     alpha(i);
-    //     let result = simplify(input);
-    //     write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
-    // }
+    for i in 0..11 {
+        let i = i as f64/10.0;
+        alpha(i);
+        let result = simplify(input);
+        write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
+    }
 
     Ok(())
 }

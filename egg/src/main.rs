@@ -145,6 +145,8 @@ fn main() -> std::io::Result<()> {
     let result = simplify(input);
     let mut dst = fs::File::create("results.txt")?;
 
+    generate_verilog(result, 2048);
+
     for i in 0..11 {
         let i = i as f64/10.0;
         alpha(i);
@@ -155,6 +157,88 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+pub type EGraphVerilogGeneration = egg::EGraph<BitLanguage, VerilogGeneration>;
+
+#[derive(Default)]
+// VerilogGeneration
+// An e-class analysis that evaluates and builds up the verilog operations in the e-graph itself.
+pub struct VerilogGeneration;
+impl Analysis<BitLanguage> for VerilogGeneration {
+    type Data = ( 
+        String, //name
+        u64,    // bw
+        String  // verilog op
+    );
+   
+    fn make(egraph: &EGraphVerilogGeneration, enode: &BitLanguage) -> Self::Data {
+        let get_name     = |i: &Id| egraph[*i].data.0.clone();
+        let get_bw       = |i: &Id| egraph[*i].data.1.clone();
+
+        let enode_name = bitlanguage_to_name(enode);
+
+        let name = format!("{}_{}", enode_name, egraph.classes().len());
+
+        match enode {
+            BitLanguage::AddW([a,b,c]) => {
+                let node = &egraph[*a].nodes[0];
+                if let BitLanguage::Num(x) = node {
+                    let bit_width = *x as u64;
+                    return (name, bit_width, format!("{} + {}", get_name(b), get_name(c)));
+                }
+                else {
+                    assert!(false);
+                }
+                (name, 0, String::default())
+            }
+            BitLanguage::Symbol(a) => {
+                (a.to_string(), 0, a.to_string())
+            }
+            _ => (name, 0, String::default())
+        }
+    }
+
+    fn merge(&mut self, _a: &mut Self::Data, _b: Self::Data) -> DidMerge {
+        DidMerge(false,false)
+    }
+}
+
+fn generate_verilog(expr : String, variable_bitwidth : u64) {
+    let mut generation_egraph = EGraphVerilogGeneration::default();
+    let root = generation_egraph.add_expr(&expr.parse().unwrap());
+
+    for class in generation_egraph.classes() {
+        let node = &class.nodes[0];
+        match node {
+            BitLanguage::Symbol(_) => (),
+            _ => println!("logic [{}:0] {};", class.data.1 - 1, class.data.0),
+        }
+    }
+
+    for class in generation_egraph.classes() {
+        let node = &class.nodes[0];
+        match node {
+            BitLanguage::Symbol(_) => (),
+            _ => println!("{} = {};", class.data.0, class.data.2),
+        }
+    }
+}
+
+fn bitlanguage_to_name(enode: &BitLanguage) -> String {
+    match enode {
+        BitLanguage::Add(_) => "add".to_string(),
+        _                   => "panic".to_string()
+        // "+" = AddW([Id; 3]),
+        // "*" = Mul([Id; 3]),
+        // "*64" = Mul64([Id; 2]),
+        // "*128" = Mul128([Id; 2]),
+        // "-" = Sub([Id; 2]),
+        // "-" = SubW([Id; 3]),
+        // "<<" = Lsl([Id; 2]),
+        // ">>" = Lsr([Id; 2]),
+        // "slice" = Slc([Id; 3]),
+        // "concat" = Cct([Id; 2]),
+    }
+}
 
 struct FPGACostFunction<'a> {
     egraph: &'a EGraph<BitLanguage, ()>,

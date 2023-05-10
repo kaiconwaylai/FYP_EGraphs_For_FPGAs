@@ -33,17 +33,17 @@ fn simplify(s: &str) -> String {
 
 fn main() -> std::io::Result<()> {
     println!("Hello, world!");
-    generate_verilog("(+ 32 IN1 IN2)".to_string(), 32);
-    let input = "(* 32 IN1 IN2)";
+    let input = "(* 128 IN1 IN2)";
     let result = simplify(input);
     let mut dst = fs::File::create("results.txt")?;
-
-    for i in 0..11 {
-        let i = i as f64/10.0;
-        alpha(i);
-        let result = simplify(input);
-        write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
-    }
+    
+    generate_verilog(result, 32);
+    // for i in 0..11 {
+    //     let i = i as f64/10.0;
+    //     alpha(i);
+    //     let result = simplify(input);
+    //     write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
+    // }
 
     Ok(())
 }
@@ -69,18 +69,45 @@ impl Analysis<BitLanguage> for VerilogGeneration {
 
         let name = format!("{}_{}", enode_name, egraph.classes().len());
 
+        let operator = match enode {
+            BitLanguage::AddW(_) => "+",
+            BitLanguage::SubW(_) => "-",
+            BitLanguage::Mul(_) => "*",
+            _ => ""
+        };
+
         match enode {
-            BitLanguage::AddW([a,b,c]) => {
+            BitLanguage::AddW([a,b,c]) | BitLanguage::SubW([a,b,c]) | BitLanguage::Mul([a,b,c]) => {
                 let node = &egraph[*a].nodes[0];
                 if let BitLanguage::Num(x) = node {
                     let bit_width = *x as u64;
-                    return (name, bit_width, format!("{} + {}", get_name(b), get_name(c)));
+                    return (name, bit_width, format!("{} {} {}", get_name(b), operator, get_name(c)));
                 }
                 else {
                     assert!(false);
                 }
                 (name, 0, String::default())
             }
+            BitLanguage::Slc([a,b,c]) => {
+                let msb_node = &egraph[*b].nodes[0];
+                let lsb_node = &egraph[*c].nodes[0];
+
+                if let BitLanguage::Num(x) = msb_node {
+                    let msb = *x as u64;
+                    if let BitLanguage::Num(y) = lsb_node {
+                        let lsb = *y as u64;
+                        return (name, msb-lsb+1, format!("{}[{}:{}]", get_name(a), msb, lsb));
+                    }
+                }
+                else {
+                    assert!(false);
+                }
+                (name, 0, String::default())
+            }
+            BitLanguage::Cct([a,b]) => {
+                return (name, get_bw(a) + get_bw(b), format!("{{{},{}}}", get_name(a), get_name(b)));
+            }
+
             BitLanguage::Symbol(a) => {
                 (a.to_string(), 32, a.to_string())
             }
@@ -97,22 +124,18 @@ fn generate_verilog(expr : String, variable_bitwidth : u64) {
     let mut generation_egraph = EGraphVerilogGeneration::default();
     let root = generation_egraph.add_expr(&expr.parse().unwrap());
 
-    println!("Expr is {expr} \n EGraph is {:?}", generation_egraph);
-
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
-        println!("Node is {}", node);
         match node {
-            BitLanguage::Symbol(_) => (),
-            _ => println!("logic [{}:0] {};", class.data.1 - 1, class.data.0),
+            BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
+            _ => println!("wire [{}:0] {};", class.data.1 - 1, class.data.0),
         }
     }
 
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
-        println!("Node is {}", node);
         match node {
-            BitLanguage::Symbol(_) => (),
+            BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
             _ => println!("{} = {};", class.data.0, class.data.2),
         }
     }
@@ -120,14 +143,18 @@ fn generate_verilog(expr : String, variable_bitwidth : u64) {
 
 fn bitlanguage_to_name(enode: &BitLanguage) -> String {
     match enode {
-        BitLanguage::Add(_)  => "add".to_string(),
-        BitLanguage::AddW(_) => "addW".to_string(),
-        BitLanguage::Mul(_)  => "mul".to_string(),
-        BitLanguage::SubW(_) => "subW".to_string(),
-        BitLanguage::Sub(_)  => "sub".to_string(),
-        BitLanguage::Slc(_)  => "slice".to_string(),
-        BitLanguage::Cct(_)  => "concat".to_string(),
-        _                    => "panic".to_string()
+        BitLanguage::Add(_)  => String::from("add"),
+        BitLanguage::AddW(_) => String::from("addW"),
+        BitLanguage::Mul(_)  => String::from("mul"),
+        BitLanguage::SubW(_) => String::from("subW"),
+        BitLanguage::Sub(_)  => String::from("sub"),
+        BitLanguage::Slc(_)  => String::from("slice"),
+        BitLanguage::Cct(_)  => String::from("concat"),
+        BitLanguage::Num(_)  => String::from(""),
+        BitLanguage::Symbol(_)  => String::from(""),
+        _                    => {
+            println!("Paniced: {}", enode);
+            String::from("panic")}
     }
 }
 

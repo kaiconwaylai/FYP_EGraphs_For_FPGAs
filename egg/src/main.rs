@@ -33,7 +33,7 @@ fn simplify(s: &str) -> String {
 
 fn main() -> std::io::Result<()> {
     println!("Hello, world!");
-    let input = "(* 128 IN1 IN2)";
+    let input = "(* 32 IN1 IN2)";
     let result = simplify(input);
     let mut dst = fs::File::create("results.txt")?;
     
@@ -77,7 +77,7 @@ impl Analysis<BitLanguage> for VerilogGeneration {
         };
 
         match enode {
-            BitLanguage::AddW([a,b,c]) | BitLanguage::SubW([a,b,c]) | BitLanguage::Mul([a,b,c]) => {
+            BitLanguage::AddW([a,b,c]) | BitLanguage::SubW([a,b,c]) => {
                 let node = &egraph[*a].nodes[0];
                 if let BitLanguage::Num(x) = node {
                     let bit_width = *x as u64;
@@ -87,6 +87,9 @@ impl Analysis<BitLanguage> for VerilogGeneration {
                     assert!(false);
                 }
                 (name, 0, String::default())
+            }
+            BitLanguage::Mul([_a,b,c]) => {
+                return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));
             }
             BitLanguage::Slc([a,b,c]) => {
                 let msb_node = &egraph[*b].nodes[0];
@@ -123,6 +126,18 @@ impl Analysis<BitLanguage> for VerilogGeneration {
 fn generate_verilog(expr : String, variable_bitwidth : u64) {
     let mut generation_egraph = EGraphVerilogGeneration::default();
     let root = generation_egraph.add_expr(&expr.parse().unwrap());
+    let get_name       = |i: &Id| generation_egraph[*i].data.0.clone();
+
+
+    let module_definition = format!("`timescale 1ns / 1ps
+    module mult(
+        input[{variable_bitwidth}:0] IN1,
+        input[{variable_bitwidth}:0] IN2,
+        output[{}:0] OUTPUT
+        );
+    ", variable_bitwidth*2);
+
+    println!("{module_definition}");
 
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
@@ -136,9 +151,14 @@ fn generate_verilog(expr : String, variable_bitwidth : u64) {
         let node = &class.nodes[0];
         match node {
             BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
-            _ => println!("{} = {};", class.data.0, class.data.2),
+            _ => println!("assign {} = {};", class.data.0, class.data.2),
         }
     }
+
+    let end_module = format!("assign OUTPUT = {};
+    endmodule", get_name(&root));
+    println!("{end_module}");
+
 }
 
 fn bitlanguage_to_name(enode: &BitLanguage) -> String {

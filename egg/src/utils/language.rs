@@ -32,6 +32,11 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
                 bw : var("?bw"),
             }
         }),
+        // rewrite!("slice_rewrite"; "(* ?bw ?x ?y)" => {
+        //     SliceRewrite {
+        //         bw : var("?bw"),
+        //     }
+        // }),
         ]
 }
 
@@ -69,19 +74,19 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         } else {
             let msb = ((bw_val/2)-1).to_string();
             let lsb = String::from("0");
-            let xlo = f!("(slice ?x {msb} {lsb})");
-            let ylo = f!("(slice ?y {msb} {lsb})");
+            let xlo = format!("(slice ?x {msb} {lsb})");
+            let ylo = format!("(slice ?y {msb} {lsb})");
             let msb = (bw_val-1).to_string();
             let lsb = (bw_val/2).to_string();
-            let xhi = f!("(slice ?x {msb} {lsb})");
-            let yhi = f!("(slice ?y {msb} {lsb})");
+            let xhi = format!("(slice ?x {msb} {lsb})");
+            let yhi = format!("(slice ?y {msb} {lsb})");
             
             let half_bw = (bw_val/2).to_string();
-            let z0 = f!("(* {half_bw} {xlo} {ylo})");
-            let z2 = f!("(* {half_bw} {xhi} {yhi})");
-            let z1 = f!("(- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) (+ {add_width_2} {z2} {z0}))", mul_bw = bw_val/2 + 1, sub_width = bw_val+1, add_width = half_bw, add_width_2 = bw_val);
+            let z0 = format!("(* {half_bw} {xlo} {ylo})");
+            let z2 = format!("(* {half_bw} {xhi} {yhi})");
+            let z1 = format!("(- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) (+ {add_width_2} {z2} {z0}))", mul_bw = bw_val/2 + 1, sub_width = bw_val+1, add_width = half_bw, add_width_2 = bw_val);
             
-            karatsuba_string = f!("(concat (+ {add_width} (concat {z2} (slice {z0} {msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", msb = bw_val-1, half_z0 = (bw_val/2)-1, add_width = bw_val * 3/2);
+            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", msb = bw_val-1, half_z0 = (bw_val/2)-1, add_width = bw_val * 3/2);
         }
         
         //can clean this up + find solution for odd numbers
@@ -95,6 +100,66 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         );
         if did_something {
             println!("{}", karatsuba_string);
+            return vec![from];
+        }
+        vec![]
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SliceRewrite {
+    bw: Var,
+}
+
+impl Applier<BitLanguage, ()> for SliceRewrite {
+    fn apply_one(
+        &self,
+        egraph: &mut EGraph<BitLanguage, ()>,
+        _matched_id: Id,
+        subst: &Subst,
+        _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+        rule_name: Symbol,
+    ) -> Vec<Id> {
+        //Id's of the class containing the operators bitwidth
+        let bw_id = subst.get(self.bw).unwrap();
+        let mut bw_val : i32 = 0;
+
+        for node in egraph[*bw_id].nodes.iter() {
+            if let BitLanguage::Num(x) = node {
+                bw_val = *x;
+                break;
+            }
+        }
+        // Compute Karasuba String Dynamically 
+        let slice_string; 
+        if bw_val < 32 {
+            slice_string = String::from("(* ?bw ?x ?y)");
+        } else {            
+            let slice_size = 18;
+            let rem_size = bw_val-slice_size;
+            let xlo = format!("(slice ?x {} 0)", slice_size-1);
+            let ylo = format!("(slice ?y {} 0)", slice_size-1);
+            let xhi = format!("(slice ?x {} {})", bw_val-1, slice_size);
+            let yhi = format!("(slice ?y {} {})", bw_val-1, slice_size);
+
+            let z2 = format!("(* {} {xhi} {yhi})", rem_size*2);
+            let z0 = format!("(* {} {xlo} {ylo})", slice_size*2);
+            let z1 = format!("(+ (* {bw_val} {xlo} {yhi}) (* {bw_val} {xhi} {ylo}))");
+
+            slice_string = format!("(+ {z2} (+ {z1} {z0}))");
+        }
+        
+        //can clean this up + find solution for odd numbers
+        // End Karatsuba Dynamic Computation
+        // TODO : fill this in!
+        let (from, did_something) = egraph.union_instantiations(
+            &"(* ?bw ?x ?y)".parse().unwrap(),
+            &slice_string.parse().unwrap(),
+            subst,
+            rule_name.clone(),
+        );
+        if did_something {
+            println!("{}", slice_string);
             return vec![from];
         }
         vec![]

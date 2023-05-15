@@ -17,3 +17,4 @@ xsim.dir
 *.o
 out.txt
 results.txt
+output

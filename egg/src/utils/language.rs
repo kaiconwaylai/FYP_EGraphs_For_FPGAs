@@ -23,9 +23,9 @@ fn var(s: &str) -> Var {
 pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
     vec![
         //rewrite!("commute-add"; "(+ ?a ?b)" => "(+ ?b ?a)"),
-        //rewrite!("commute-mul"; "(* ?num ?a ?b)" => "(* ?num ?b ?a)"),
         //rewrite!("karatsuba64"; "(*64 ?a ?b)" => "(+ (<< 32 (- (* 33 (+ (slice ?a 63 32) (slice ?a 31 0)) (+ (slice ?b 63 32) (slice ?b 31 0))) (+ (* 32 (slice ?a 63 32) (slice ?b 63 32)) (* 32 (slice ?a 31 0) (slice ?b 31 0))))) (+ (<< 64 (* 32 (slice ?a 63 32) (slice ?b 63 32))) (* 32 (slice ?a 31 0) (slice ?b 31 0))))"),
         //rewrite!("karatsuba128"; "(*128 ?a ?b)" => "(+ (<< 64 (- (* 65 (+ (slice ?a 127 64) (slice ?a 63 0)) (+ (slice ?b 127 64) (slice ?b 63 0))) (+ (*64 (slice ?a 127 64) (slice ?b 127 64)) (*64 (slice ?a 63 0) (slice ?b 63 0))))) (+ (<< 128 (* 32 (slice ?a 127 64) (slice ?b 127 64))) (*64 (slice ?a 63 0) (slice ?b 63 0))))"),
+        //rewrite!("commute-mul"; "(* ?bw ?x ?y)" => "(* ?bw ?x ?y)"),
         
         rewrite!("karatsuba_expansion"; "(* ?bw ?x ?y)" => {
             KaratsubaExpand {

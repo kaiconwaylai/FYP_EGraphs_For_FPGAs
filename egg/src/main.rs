@@ -5,10 +5,6 @@ use std::io::prelude::*;
 mod utils;
 use utils::{language::*,costs::*};
 
-
-#[macro_use]
-extern crate fstrings;
-
 fn simplify(s: &str) -> String {
     let expr: RecExpr<BitLanguage> = s.parse().unwrap();
     // simplify the expression using a Runner, which creates an e-graph with the given expression and runs the given rules over it
@@ -33,17 +29,21 @@ fn simplify(s: &str) -> String {
 
 fn main() -> std::io::Result<()> {
     println!("Hello, world!");
-    let input = "(* 32 IN1 IN2)";
+    let input = "(* 64 IN1 IN2)";
     let result = simplify(input);
-    let mut dst = fs::File::create("results.txt")?;
+    fs::create_dir_all("./output")?;
+    let dst = fs::File::create("./output/mult.v")?;
     
-    generate_verilog(result, 32);
-    // for i in 0..11 {
-    //     let i = i as f64/10.0;
-    //     alpha(i);
-    //     let result = simplify(input);
-    //     write!(dst, "Alpha = {}. Result = {}\n\n", i, result)?;
-    // }
+    generate_verilog(&result, 64, &dst);
+    
+    let mut dst = fs::File::create("./output/results.txt")?;
+
+    for i in 0..101 {
+        let i = i as f64/100.0;
+        alpha(i);
+        let result = simplify(input);
+        write!(dst, "Alpha = {}. Result = {}\n\n", alpha(-1.0), result)?;
+    }
 
     Ok(())
 }
@@ -123,7 +123,7 @@ impl Analysis<BitLanguage> for VerilogGeneration {
     }
 }
 
-fn generate_verilog(expr : String, variable_bitwidth : u64) {
+fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs::File) {
     let mut generation_egraph = EGraphVerilogGeneration::default();
     let root = generation_egraph.add_expr(&expr.parse().unwrap());
     let get_name       = |i: &Id| generation_egraph[*i].data.0.clone();
@@ -131,19 +131,18 @@ fn generate_verilog(expr : String, variable_bitwidth : u64) {
 
     let module_definition = format!("`timescale 1ns / 1ps
     module mult(
-        input[{variable_bitwidth}:0] IN1,
-        input[{variable_bitwidth}:0] IN2,
-        output[{}:0] OUTPUT
-        );
-    ", variable_bitwidth*2);
-
-    println!("{module_definition}");
+            input[{bw}:0] IN1,
+            input[{bw}:0] IN2,
+            output[{}:0] OUTPUT
+        );\n", variable_bitwidth*2-1,  bw = variable_bitwidth-1);
+    
+    let mut module_body = String::default();
 
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
         match node {
             BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
-            _ => println!("wire [{}:0] {};", class.data.1 - 1, class.data.0),
+            _ => module_body.push_str(&format!("wire [{}:0] {};\n", class.data.1 - 1, class.data.0)),
         }
     }
 
@@ -151,14 +150,14 @@ fn generate_verilog(expr : String, variable_bitwidth : u64) {
         let node = &class.nodes[0];
         match node {
             BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
-            _ => println!("assign {} = {};", class.data.0, class.data.2),
+            _ => module_body.push_str(&format!("assign {} = {};\n", class.data.0, class.data.2)),
         }
     }
 
     let end_module = format!("assign OUTPUT = {};
     endmodule", get_name(&root));
     println!("{end_module}");
-
+    write!(file, "{}{}{}", module_definition, module_body, end_module).expect("File broke");
 }
 
 fn bitlanguage_to_name(enode: &BitLanguage) -> String {

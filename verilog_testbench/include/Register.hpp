@@ -38,7 +38,7 @@ public:
     Input(std::string n, int width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
 
     void setValue(unsigned val);
-    void setValue(std::string val);
+    void setValue(const std::string& val);
     void randomiseValue();
     std::string getValue() const {return value;};
 private:

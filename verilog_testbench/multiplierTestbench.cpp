@@ -14,9 +14,9 @@ std::string getcurrentdir();
 
 int main(int argc, char **argv) {
 
-   const unsigned IN1_WIDTH = 32;
-   const unsigned IN2_WIDTH = 32;
-   const unsigned OUTPUT_WIDTH = 64;
+   const unsigned IN1_WIDTH = 33;
+   const unsigned IN2_WIDTH = 33;
+   const unsigned OUTPUT_WIDTH = 66;
 
    auto cwd = getcurrentdir();
    std::string simengine_libname = "librdi_simulator_kernel";
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
    std::cout << "Sim Engine DLL : " << simengine_libname << std::endl;
 
    int status = 0;
-   auto testCases = standardiseUnitTests(OUTPUT_WIDTH);
+   auto testCases = standardiseUnitTests(OUTPUT_WIDTH, IN1_WIDTH, IN2_WIDTH);
    unsigned testsCompleted = 0;
    unsigned testsPassed = 0;
 
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
       status = 2;
    }
    catch (const char* msg) {
-      std::cerr << "ERROR: An exception occured:" << msg << std::endl;
+      std::cerr << "ERROR: An exception occured: " << msg << std::endl;
       status = 3;
    }
    catch (...) {

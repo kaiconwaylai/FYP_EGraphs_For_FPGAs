@@ -63,3 +63,31 @@ std::string multiply(const Input& A, const Input& B) {
     return result;
 }
 
+std::string multiply(const std::string& A, const std::string& B, unsigned outputWidth) {
+
+    std::string result = "0";
+
+    auto l = A;
+    auto r = B;
+
+    if(l.size() < r.size()) 
+        swap(l,r);
+
+    int j = r.size()-1;
+    while(j > -1) {
+        if(r[j] == '1') {
+            int shift = r.size()-1-j;
+            auto shifted = logicShiftLeft(l, shift);
+            result = binaryAdd(result, shifted);
+        }
+        j--;
+    }
+
+    int pad = outputWidth - result.length();
+    if(pad < 1) {
+        return result;
+    } else {
+        result = std::string(pad, '0') + result;
+    }
+}
+

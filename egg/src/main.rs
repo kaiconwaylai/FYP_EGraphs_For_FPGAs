@@ -27,7 +27,7 @@ fn simplify(s: &str)  -> String {
     }
 }
 
-static INPUT_BW : u64 = 64;
+static INPUT_BW : u64 = 128;
 fn main() -> std::io::Result<()> {
     println!("Hello, world!");
     fs::create_dir_all("./output")?;
@@ -35,14 +35,14 @@ fn main() -> std::io::Result<()> {
     let dst = fs::File::create("./output/mult.v")?;
     alpha(0.0);
     let result = simplify(&input);
-    
+
     generate_verilog(&result, INPUT_BW, &dst);
     
     let mut dst = fs::File::create("./output/results.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
     let runner = Runner::default().with_expr(&expr).run(&make_rules());
-    let root = runner.roots[0];
+    let root: Id = runner.roots[0];
 
     for i in 0..11 {
         let i = i as f64/500.0;
@@ -51,7 +51,6 @@ fn main() -> std::io::Result<()> {
         let best_sol = lp_extractor.solve(root);
         write!(dst, "Alpha = {}. Result = {}\n\n", alpha(-1.0), best_sol.to_string())?;        
     }
-
 
     Ok(())
 }

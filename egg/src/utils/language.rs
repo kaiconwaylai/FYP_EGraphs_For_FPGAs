@@ -32,11 +32,11 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
                 bw : var("?bw"),
             }
         }),
-        rewrite!("slice_rewrite"; "(* ?bw ?x ?y)" => {
-            SliceRewrite {
-                bw : var("?bw"),
-            }
-        }),
+        // rewrite!("slice_rewrite"; "(* ?bw ?x ?y)" => {
+        //     SliceRewrite {
+        //         bw : var("?bw"),
+        //     }
+        // }),
         ]
 }
 
@@ -81,12 +81,11 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let xhi = format!("(slice ?x {msb} {lsb})");
             let yhi = format!("(slice ?y {msb} {lsb})");
             
-            let half_bw = (bw_val/2).to_string();
-            let z0 = format!("(* {half_bw} {xlo} {ylo})");
-            let z2 = format!("(* {half_bw} {xhi} {yhi})");
-            let z1 = format!("(- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) (+ {add_width_2} {z2} {z0}))", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, add_width_2 = bw_val+1, mul_bw  = (bw_val - bw_val/2)+1);
+            let z0 = format!("(* {half_bw} {xlo} {ylo})", half_bw = bw_val/2);
+            let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
+            let z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
             
-            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = bw_val-1, half_z0 = (bw_val/2)-1, add_width = bw_val * 3/2);
+            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2);
         }
         
         //can clean this up + find solution for odd numbers

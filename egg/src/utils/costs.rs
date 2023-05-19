@@ -224,3 +224,5 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
         op_cost
     }
 }
+
+//(slice (* 16 (slice (+ 33 (slice IN1 31 0) (slice IN1 63 32)) 15 0) (slice (+ 33 (slice IN2 31 0) (slice IN2 63 32)) 15 0)) 32 16)

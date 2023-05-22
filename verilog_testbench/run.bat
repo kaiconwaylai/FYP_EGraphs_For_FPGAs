@@ -20,7 +20,7 @@ call set install_root="C:\Xilinx\Vivado\2020.2"
 
 call set PATH=C:\Xilinx\Vivado\2020.2/lib/win64.o;C:\Xilinx\Vivado\2020.2/tps/mingw/6.2.0/win64.o/nt/x86_64-w64-mingw32/lib
 
-call C:\Xilinx\Vivado\2020.2\bin\xelab work.mult_verilog -prj mult.prj -dll -s mult
+call C:\Xilinx\Vivado\2020.2\bin\xelab work.mult -prj mult.prj -dll -s mult
 
 call "C:\Xilinx\Vivado\2020.2\tps\mingw\6.2.0\win64.o\nt\bin\g++.exe" -I C:\Xilinx\Vivado\2020.2\data\xsim\include\ -O3 -c -o xsi_loader.o ./src/xsi_loader.cpp
 

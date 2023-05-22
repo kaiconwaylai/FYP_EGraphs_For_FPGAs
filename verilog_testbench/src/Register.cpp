@@ -2,6 +2,8 @@
 #include <stdlib.h>     /* srand, rand */
 #include <algorithm>
 #include <cmath>
+#include<ctime>
+
 
 void Input::setValue(unsigned val) {
     if(val = 0) {
@@ -39,6 +41,7 @@ void Input::setValue(const std::string& val) {
 }
 
 void Input::randomiseValue() {
+    srand(time(0));
     std::string newVal(width, 0);
     for(char& i : newVal) {
         if(rand()%2) {
@@ -140,7 +143,6 @@ std::string Output::getValue() {
     return value;
 }
 
-//END BORROWING
 bool Register::operator==(const Register& rhs) const {
     return value == rhs.value;
 }

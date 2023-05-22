@@ -8,15 +8,14 @@
 #include "./include/xsi_loader.h"
 #include "./include/multiplier.hpp"
 
-const char *expected_out[15] = {"0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111"};
 
 std::string getcurrentdir();
 
 int main(int argc, char **argv) {
 
-   const unsigned IN1_WIDTH = 33;
-   const unsigned IN2_WIDTH = 33;
-   const unsigned OUTPUT_WIDTH = 66;
+   const unsigned IN1_WIDTH = 128;
+   const unsigned IN2_WIDTH = 128;
+   const unsigned OUTPUT_WIDTH = IN1_WIDTH + IN2_WIDTH;
 
    auto cwd = getcurrentdir();
    std::string simengine_libname = "librdi_simulator_kernel";
@@ -70,11 +69,11 @@ int main(int argc, char **argv) {
          testsCompleted++; testsPassed++;
       }
 
-      for(int i = 0; i < 10; i++) {
+      for(int i = 0; i < 45; i++) {
          IN1.randomiseValue();
          IN2.randomiseValue();
          auto expected = multiply(IN1, IN2);
-         XSI.run(1);
+         XSI.run(1000);
          auto res = OUTPUT.getValue();
          if(res != expected) {
             std::cout << "TEST FAILED \n";

@@ -85,11 +85,9 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
             let z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
             
-            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2);
+            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); // add_width is a hack with the +1
         }
         
-        //can clean this up + find solution for odd numbers
-        // End Karatsuba Dynamic Computation
         // TODO : fill this in!
         let (from, did_something) = egraph.union_instantiations(
             &"(* ?bw ?x ?y)".parse().unwrap(),

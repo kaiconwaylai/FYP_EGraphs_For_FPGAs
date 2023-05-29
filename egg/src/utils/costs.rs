@@ -165,20 +165,40 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     where
         C: FnMut(Id) -> Self::Cost
     {
-        let op_cost = match enode.to_string().as_str() {
+        let op = enode.to_string();
+        let op_cost = match op.as_str() {
             "*" => {
                 if let BitLanguage::Mul([a,_b,_c]) = enode {
                     let node = &self.egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
-                        let bit_width = *x as f64;
-                        let t1 = ((bit_width-9.)/17.).ceil();
-                        let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
-                        return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: x * 6};
+                        let cost = mul_cost(*x);
+                        println!("cost of node is: {}", cost);
+                        return cost;
                     }
                 }
-                return fpga::Cost{dsp: 0, lut: 0};
+                fpga::Cost{dsp: 0, lut: 0}
             },
-            _ => Self::Cost {dsp: 0, lut: 1},
+            "-" => {
+                if let BitLanguage::SubW([a,_b,_c]) = enode {
+                    let node = &self.egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x;
+                        return fpga::Cost{dsp: 0, lut: bit_width};
+                    }
+                }
+                fpga::Cost{dsp: 0, lut: 0}
+            }
+            "+" => {
+                if let BitLanguage::AddW([a,_b,_c]) = enode {
+                    let node = &self.egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let bit_width = *x;
+                        return fpga::Cost{dsp: 0, lut: bit_width};
+                    }
+                }
+                fpga::Cost{dsp: 0, lut: 0}
+            }
+            _ => fpga::Cost{dsp:0, lut:0},
         };
         enode.fold(op_cost, |sum, id| sum + costs(id))
     }
@@ -224,5 +244,3 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
         op_cost
     }
 }
-
-//(slice (* 16 (slice (+ 33 (slice IN1 31 0) (slice IN1 63 32)) 15 0) (slice (+ 33 (slice IN2 31 0) (slice IN2 63 32)) 15 0)) 32 16)

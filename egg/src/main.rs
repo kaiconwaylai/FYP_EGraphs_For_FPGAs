@@ -44,12 +44,13 @@ fn main() -> std::io::Result<()> {
     let runner = Runner::default().with_expr(&expr).run(&make_rules());
     let root: Id = runner.roots[0];
 
-    for i in 0..11 {
+    for i in 0..21 {
         let i = i as f64/500.0;
         alpha(i);
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
         let best_sol = lp_extractor.solve(root);
-        write!(dst, "Alpha = {}. Result = {}\n\n", alpha(-1.0), best_sol.to_string())?;        
+        let cost = FPGACostFunction::cost_rec(&mut FPGACostFunction{egraph: &runner.egraph},&best_sol);
+        write!(dst, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. Result = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp, best_sol.to_string())?;        
     }
 
     Ok(())

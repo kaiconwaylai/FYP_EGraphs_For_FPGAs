@@ -1,56 +1,40 @@
 use egg::*;
 use std::fs;
 use std::io::prelude::*;
+use std::collections::HashSet;
 
 mod utils;
-use utils::{language::*,costs::*, codegen::*};
+use utils::{language::*,costs::*, codegen::*, fpga::*};
 
-fn simplify(s: &str)  -> String {
-    let expr: RecExpr<BitLanguage> = s.parse().unwrap();
-    // simplify the expression using a Runner, which creates an e-graph with the given expression and runs the given rules over it
-    let runner: Runner<BitLanguage, ()> = Runner::default().with_expr(&expr).run(&make_rules());
-    // the Runner knows which e-class the expression given with `with_expr` is in
-    let root = runner.roots[0];
-
-    // use an Extractor to pick the best element of the root eclass
-    
-    if true {
-        let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
-        let best_sol = lp_extractor.solve(root);
-        println!("LP Simplified {} to {}", expr, best_sol);
-        return best_sol.to_string();
-    } else {
-        let extractor = Extractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
-        let (best_cost, best) = extractor.find_best(root);
-        println!("Simplified {} to {} with cost {}", expr, best, best_cost);
-        return best.to_string();
-    }
-}
-
-static INPUT_BW : u64 = 128;
+static INPUT_BW : u64 = 256;
 fn main() -> std::io::Result<()> {
     println!("Hello, world!");
     fs::create_dir_all("./output")?;
+    fs::remove_dir_all("./output/verilog")?;
+    fs::create_dir_all("./output/verilog")?;
     let input = format!("(* {INPUT_BW} IN1 IN2)");
-    let dst = fs::File::create("./output/mult.v")?;
-    alpha(0.0);
-    let result = simplify(&input);
-
-    generate_verilog(&result, INPUT_BW, &dst);
     
-    let mut dst = fs::File::create("./output/results.txt")?;
+    let mut results = fs::File::create("./output/results.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
     let runner = Runner::default().with_expr(&expr).run(&make_rules());
     let root: Id = runner.roots[0];
 
-    for i in 0..21 {
-        let i = i as f64/500.0;
-        alpha(i);
-        let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph});
+    let mut unique_solutions = HashSet::new();
+
+    for i in 0..41 {
+        alpha(i as f64/500.0);
+        let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
         let best_sol = lp_extractor.solve(root);
-        let cost = FPGACostFunction::cost_rec(&mut FPGACostFunction{egraph: &runner.egraph},&best_sol);
-        write!(dst, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. Result = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp, best_sol.to_string())?;        
+        let best = best_sol.to_string();
+        if unique_solutions.insert(best.clone()) {
+            let cost = FPGACostFunction::cost_rec(&mut FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()},&best_sol);
+            
+            let mut dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
+            write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
+            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
+            generate_verilog(&best, INPUT_BW, &dst);
+        }
     }
 
     Ok(())

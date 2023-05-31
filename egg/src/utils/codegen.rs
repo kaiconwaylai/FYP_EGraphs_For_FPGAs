@@ -68,7 +68,9 @@ impl Analysis<BitLanguage> for VerilogGeneration {
             }
 
             BitLanguage::Symbol(a) => {
-                (a.to_string(), INPUT_BW, a.to_string())
+                unsafe {
+                    (a.to_string(), INPUT_BW, a.to_string())
+                }
             }
             _ => (name, 32, String::default())
         }

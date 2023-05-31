@@ -4,7 +4,6 @@ import subprocess
 import csv
 import xml.dom.minidom
 
-
 def extract_data(path):
     doc = xml.dom.minidom.parse(path)
     for sec in doc.getElementsByTagName('section'):
@@ -16,10 +15,9 @@ def extract_data(path):
     LUTs = (CLB.childNodes[1].childNodes[5].childNodes[3].getAttribute('contents'))
     DSPs = (ARITHMETIC.childNodes[1].childNodes[3].childNodes[3].getAttribute('contents'))
 
-
     return int(LUTs), int(DSPs)
 
-def run_synthesis():
+def run_vivado():
     program = "run_tcl.sh"
     process = subprocess.Popen(['sh', program])
     process.wait()
@@ -35,7 +33,7 @@ def main():
             mySet.add((IN1, IN2))
             default_multiply.set_variables(IN1_WIDTH = IN1, IN2_WIDTH = IN2)
             default_multiply.write_code('tmp/mult.v')
-            run_synthesis()
+            run_vivado()
             LUTs, DSPs = extract_data('tmp/synth.xml')
             data.append([IN2, IN1, LUTs, DSPs])
             with open('data.csv', 'a') as os:

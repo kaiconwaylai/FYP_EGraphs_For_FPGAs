@@ -2,20 +2,27 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 #include "./include/Register.hpp"
 #include "./include/testValues.hpp"
 #include "./include/xsi_loader.h"
 #include "./include/multiplier.hpp"
 
-
 std::string getcurrentdir();
 
 int main(int argc, char **argv) {
 
-   const unsigned IN1_WIDTH = 128;
-   const unsigned IN2_WIDTH = 128;
-   const unsigned OUTPUT_WIDTH = IN1_WIDTH + IN2_WIDTH;
+   unsigned IN1_WIDTH;
+   if(argc > 1) {
+      std::string str(argv[1]);
+      std::stringstream(str)>>IN1_WIDTH;
+   } else {
+      IN1_WIDTH = 128;
+   }
+
+   unsigned IN2_WIDTH = IN1_WIDTH;
+   unsigned OUTPUT_WIDTH = IN1_WIDTH + IN2_WIDTH;
 
    auto cwd = getcurrentdir();
    std::string simengine_libname = "librdi_simulator_kernel";

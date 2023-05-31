@@ -121,7 +121,7 @@ impl Applier<BitLanguage, ()> for SliceRewrite {
         }
         // Compute Karasuba String Dynamically 
         let slice_string; 
-        if bw_val < 32 {
+        if bw_val < 36 {
             slice_string = String::from("(* ?bw ?x ?y)");
         } else {            
             let slice_size = 18;

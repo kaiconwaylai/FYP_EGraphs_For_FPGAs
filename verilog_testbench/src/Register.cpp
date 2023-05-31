@@ -54,7 +54,6 @@ void Input::randomiseValue() {
     sendValue();
 }
 
-
 void Input::sendValue() {
     unsigned arraySize = std::ceil(width/32.0);
     std::vector<s_xsi_vlog_logicval> data(arraySize, {0,0});
@@ -69,9 +68,7 @@ void Input::sendValue() {
     
 	loader->put_value(port, &data[0]);
     loader->run(10);
-
 }
-
 
 void append_logic_val_bit_to_string(std::string& retVal, int aVal, int bVal)
 {
@@ -89,7 +86,6 @@ void append_logic_val_bit_to_string(std::string& retVal, int aVal, int bVal)
         }
      }
 }
-
 
 void append_logic_val_to_string(std::string& retVal, int aVal, int bVal, int max_bits)
 {

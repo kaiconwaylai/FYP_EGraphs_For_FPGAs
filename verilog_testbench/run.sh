@@ -32,4 +32,7 @@ $GCC_COMPILER -I$XSI_INCLUDE_DIR  -O3 -c -o testbench.o multiplierTestbench.cpp
 $GCC_COMPILER -ldl -lrt  -o $OUT_EXE testbench.o xsi_loader.o register.o
 
 # Run the program
-./$OUT_EXE
+./$OUT_EXE $1
+
+find . -name '*.o' -delete
+rm run_simulation

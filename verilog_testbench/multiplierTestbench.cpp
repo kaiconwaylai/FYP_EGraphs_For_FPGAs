@@ -13,8 +13,8 @@ std::string getcurrentdir();
 
 int main(int argc, char **argv) {
 
-   const unsigned IN1_WIDTH = 128;
-   const unsigned IN2_WIDTH = 128;
+   const unsigned IN1_WIDTH = 36;
+   const unsigned IN2_WIDTH = 36;
    const unsigned OUTPUT_WIDTH = IN1_WIDTH + IN2_WIDTH;
 
    auto cwd = getcurrentdir();

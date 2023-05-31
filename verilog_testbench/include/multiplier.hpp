@@ -89,5 +89,6 @@ std::string multiply(const std::string& A, const std::string& B, unsigned output
     } else {
         result = std::string(pad, '0') + result;
     }
+    return result;
 }
 

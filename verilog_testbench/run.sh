@@ -7,6 +7,8 @@
 
 #set VIVADO_BIN_DIR="$RDI_ROOT/prep/rdi/vivado/bin"
 
+cd /home/ubuntu/Documents/FYP_EGraphs_For_FPGAs/verilog_testbench
+
 VIVADO_BIN_DIR="/mnt/c/Xilinx/Vivado/2020.2/bin"
 
 OUT_SIM_SNAPSHOT="mult"

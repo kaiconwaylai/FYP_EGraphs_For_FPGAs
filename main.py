@@ -15,7 +15,8 @@ def run_egg(bw):
     process.wait()
 
 def run_synth(bw):
-    x = 1
+    process = subprocess.Popen(['sh', synthesise])
+    process.wait()
 
 def run_testing(bw):
     process = subprocess.Popen(['sh', tb_exe, str(bw)])
@@ -36,6 +37,8 @@ def main():
             shutil.copyfile(fname, tb_v_src)
             shutil.copyfile(fname, synthesis_v_src)
             run_testing(bw)
+            run_synth(bw)
+
 
 
 

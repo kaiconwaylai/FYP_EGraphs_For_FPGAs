@@ -11,7 +11,9 @@ synthesise = cur_dir + "/python/run_tcl.sh"
 synthesis_v_src = "./tmp/mult.v"
 
 def run_egg(bw):
+    os.chdir(cur_dir + "/egg")
     process = subprocess.Popen(['sh', egg_exe, str(bw)])
+    os.chdir(cur_dir)
     process.wait()
 
 def run_synth(bw):
@@ -19,7 +21,9 @@ def run_synth(bw):
     process.wait()
 
 def run_testing(bw):
+    os.chdir(cur_dir + "/verilog_testbench")
     process = subprocess.Popen(['sh', tb_exe, str(bw)])
+    os.chdir(cur_dir)
     process.wait()
 
 

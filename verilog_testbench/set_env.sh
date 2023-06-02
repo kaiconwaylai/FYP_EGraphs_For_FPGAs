@@ -2,7 +2,6 @@
 # Copyright (c) 1986-2023 Xilinx, Inc.  All rights reserved. #
 ##############################################################
 
-source '/mnt/c/Xilinx/Vivado/2020.2/.settings64-Vivado.sh'
-source '/mnt/c/Xilinx/Vitis_HLS/2020.2/.settings64-Vitis_HLS.sh'
+source '/mnt/applications/Xilinx/20.1/Vivado/2020.1/settings64.sh'
 
-export PATH='/mnt/c/Xilinx/Vitis_HLS/2020.2/bin:/mnt/c/Xilinx/Vivado/2020.2/lib/win64.o'
+setenv LD_LIBRARY_PATH /mnt/applications/Xilinx/20.1/Vivado/2020.1/lib/lnx64.o:${LD_LIBRARY_PATH}

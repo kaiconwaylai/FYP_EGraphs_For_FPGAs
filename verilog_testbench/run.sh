@@ -25,13 +25,13 @@ OUT_EXE="run_simulation"
 
 # Compile the C++ code that interfaces with XSI of ISim
 #$GCC_COMPILER -I$XSI_INCLUDE_DIR  -g -c -o xsi_loader.o xsi_loader.cpp
-$GCC_COMPILER -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o xsi_loader.o ./src/xsi_loader.cpp
-$GCC_COMPILER -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o register.o ./src/Register.cpp
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o xsi_loader.o ./src/xsi_loader.cpp
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o register.o ./src/Register.cpp
 # Compile the program that needs to simulate the HDL design
 #$GCC_COMPILER -I$XSI_INCLUDE_DIR  -g -c -o testbench.o testbench.cpp
-$GCC_COMPILER -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o testbench.o multiplierTestbench.cpp
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o testbench.o multiplierTestbench.cpp
 
-$GCC_COMPILER -ldl -lrt -o $OUT_EXE testbench.o xsi_loader.o register.o
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -ldl -lrt -o $OUT_EXE testbench.o xsi_loader.o register.o
 
 # Run the program
 ./$OUT_EXE $1

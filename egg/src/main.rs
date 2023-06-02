@@ -5,7 +5,7 @@ use std::io::prelude::*;
 use std::collections::HashSet;
 
 mod utils;
-use utils::{language::*,costs::*, codegen::*, fpga::*};
+use utils::{language::*,costs::*, codegen::*};
 
 static mut INPUT_BW : u64 = 235;
 fn main() -> std::io::Result<()> {

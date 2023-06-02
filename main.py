@@ -30,6 +30,7 @@ def main():
 
     for bw in range(123, 124):
         run_egg(bw)
+        print("egg ran\n")
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)
             if not os.path.isfile(fname):

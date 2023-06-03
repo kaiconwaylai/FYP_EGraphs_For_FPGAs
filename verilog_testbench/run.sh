@@ -2,8 +2,7 @@
 
 #Set VIVADO_BIN_DIR to the directory which has vivado executable
 
-## the paths etc have been butchered to try get it to work in wsl idk how / if its possible;
-
+## the paths etc have been butchered to try get it to work in wsl idk how / if its possible;S
 
 #set VIVADO_BIN_DIR="$RDI_ROOT/prep/rdi/vivado/bin"
 
@@ -19,9 +18,7 @@ OUT_EXE="run_simulation"
 #rm -rf xsim.dir xsim.log xelab* $OUT_EXE
 
 # Compile the HDL design into a simulatable Shared Library
-/mnt/applications/Xilinx/20.1/Vivado/2020.1/bin/xelab work.mult -prj mult.prj -dll -s $OUT_SIM_SNAPSHOT -debug wave
-
-/mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/bin/xelab work.mult -prj mult.prj -dll -s mult -debug wave
 
 # Compile the C++ code that interfaces with XSI of ISim
 #$GCC_COMPILER -I$XSI_INCLUDE_DIR  -g -c -o xsi_loader.o xsi_loader.cpp
@@ -31,10 +28,10 @@ OUT_EXE="run_simulation"
 #$GCC_COMPILER -I$XSI_INCLUDE_DIR  -g -c -o testbench.o testbench.cpp
 /mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -I /mnt/applications/Xilinx/20.1/Vivado/2020.1/data/xsim/include -O3 -c -o testbench.o multiplierTestbench.cpp
 
-/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -ldl -lrt -o $OUT_EXE testbench.o xsi_loader.o register.o
+/mnt/applications/Xilinx/20.1/Vivado/2020.1/tps/lnx64/gcc-6.2.0/bin/g++ -ldl -lrt -o run_sim testbench.o xsi_loader.o register.o
 
 # Run the program
-./$OUT_EXE $1
+./run_sim $1
 
 find . -name '*.o' -delete
-rm run_simulation
+rm run_sim

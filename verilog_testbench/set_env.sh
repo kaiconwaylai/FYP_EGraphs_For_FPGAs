@@ -4,4 +4,4 @@
 
 source '/mnt/applications/Xilinx/20.1/Vivado/2020.1/settings64.sh'
 
-setenv LD_LIBRARY_PATH /mnt/applications/Xilinx/20.1/Vivado/2020.1/lib/lnx64.o:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/mnt/applications/Xilinx/20.1/Vivado/2020.1/lib/lnx64.o:${LD_LIBRARY_PATH}

@@ -26,8 +26,8 @@ def main():
     default_multiply = CodeTemplate("template_code/templates/verilog_mult")
     data = []
     mySet = {(0,0)}
-    for IN2 in range(22,34):
-        for IN1 in range(IN2,34):
+    for IN2 in range(40,129):
+        for IN1 in range(IN2,IN2+1):
             if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
                 continue 
             mySet.add((IN1, IN2))

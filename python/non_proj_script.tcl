@@ -1,5 +1,5 @@
 set OUTPUT_DIR tmp 
-set PART xcvu9p-flga2104-2-i
+set PART xcu250-figd2104-2L-e
 set SOURCE tmp
 set FILE_NAME.v mult.v
 

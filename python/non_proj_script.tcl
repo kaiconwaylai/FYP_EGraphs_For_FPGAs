@@ -11,6 +11,8 @@ read_verilog [glob tmp/mult.v]
 
 synth_design -top MULT -part ${PART}
 
+opt_design
+
 report_utilization -file ${OUTPUT_DIR}/synth.xml -format xml
 
 exit

@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
       std::string str(argv[1]);
       std::stringstream(str)>>IN1_WIDTH;
    } else {
-      IN1_WIDTH = 128;
+      IN1_WIDTH = 32;
    }
 
    unsigned IN2_WIDTH = IN1_WIDTH;

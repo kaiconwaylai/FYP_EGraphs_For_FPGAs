@@ -4,6 +4,7 @@ define_language! {
     pub enum BitLanguage {
         "+" = Add([Id; 2]),
         "+" = AddW([Id; 3]),
+        "*" = MulNW([Id; 2]),
         "*" = Mul([Id; 3]),
         "-" = Sub([Id; 2]),
         "-" = SubW([Id; 3]),
@@ -29,7 +30,7 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
         //     SliceRewrite {
         //         bw : var("?bw"),
         //     }
-        // }),
+        // }), 119 -> 78 41
         ]
 }
 

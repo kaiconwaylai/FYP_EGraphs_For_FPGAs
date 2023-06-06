@@ -93,7 +93,8 @@ pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs:
         input[{bw}:0] IN2,
         output[{}:0] OUTPUT
     );\n", variable_bitwidth*2-1,  bw = variable_bitwidth-1);
-    
+    write!(file, "{}", module_definition).expect("File broke");
+
     let mut module_body = String::default();
 
     for class in generation_egraph.classes() {
@@ -111,10 +112,11 @@ pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs:
             _ => module_body.push_str(&format!("assign {} = {};\n", class.data.0, class.data.2)),
         }
     }
+    write!(file, "{}", module_body).expect("File broke");
 
     let end_module = format!("assign OUTPUT = {};
     endmodule", get_name(&root));
-    write!(file, "{}{}{}", module_definition, module_body, end_module).expect("File broke");
+    write!(file, "{}", end_module).expect("File broke");
 }
 
 fn bitlanguage_to_name(enode: &BitLanguage) -> String {

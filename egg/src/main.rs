@@ -7,8 +7,10 @@ use std::collections::HashSet;
 mod utils;
 use utils::{language::*,costs::*, codegen::*};
 
-static mut INPUT_BW : u64 = 235;
+static mut INPUT_BW : u64 = 1024;
 fn main() -> std::io::Result<()> {
+    use std::time::Instant;
+    let now = Instant::now();
     let args: Vec<_> = env::args().collect();
     if args.len() > 1 {
         unsafe {
@@ -33,7 +35,7 @@ fn main() -> std::io::Result<()> {
 
     let mut unique_solutions = HashSet::new();
 
-    for i in 0..501 {
+    for i in 0..101 {
         alpha(i as f64/500.0);
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
         let best_sol = lp_extractor.solve(root);
@@ -53,6 +55,11 @@ fn main() -> std::io::Result<()> {
             break;
         }
     }
+
+
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 
     Ok(())
 }

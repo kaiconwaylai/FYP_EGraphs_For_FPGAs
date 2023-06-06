@@ -7,7 +7,7 @@ use std::collections::HashSet;
 mod utils;
 use utils::{language::*,costs::*, codegen::*};
 
-static mut INPUT_BW : u64 = 235;
+static mut INPUT_BW : u64 = 1024;
 fn main() -> std::io::Result<()> {
     let args: Vec<_> = env::args().collect();
     if args.len() > 1 {

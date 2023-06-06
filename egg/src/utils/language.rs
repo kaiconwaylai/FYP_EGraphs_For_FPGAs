@@ -63,7 +63,7 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         }
         // Compute Karasuba String Dynamically 
         let karatsuba_string; 
-        if bw_val < 32 {
+        if bw_val < 10 {
             karatsuba_string = String::from("(* ?bw ?x ?y)");
         } else {
             let msb = ((bw_val/2)-1).to_string();
@@ -74,13 +74,17 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let lsb = (bw_val/2).to_string();
             let xhi = format!("(slice ?x {msb} {lsb})");
             let yhi = format!("(slice ?y {msb} {lsb})");
-            
             let z0 = format!("(* {half_bw} {xlo} {ylo})", half_bw = bw_val/2);
             let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
-            let z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
-            
+            let z1;
+            if bw_val < 36 {
+                z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+1, mul_width = bw_val/2);
+            } else {            
+                z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
+            }
             karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); // add_width is a hack with the +1
         }
+
         
         // TODO : fill this in!
         let (from, did_something) = egraph.union_instantiations(

@@ -219,7 +219,6 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
             }
         };
     } else { 
-        //println!("Already seen");
         op_cost = fpga::Cost{dsp:0, lut:0};
     }
     enode.fold(op_cost, |sum, id| sum + costs(id))

@@ -28,7 +28,7 @@ impl Analysis<BitLanguage> for VerilogGeneration {
         let operator = match enode {
             BitLanguage::AddW(_) => "+",
             BitLanguage::SubW(_) => "-",
-            BitLanguage::Mul(_) => "*",
+            BitLanguage::Mul(_) | BitLanguage::MulNW(_) => "*",
             _ => ""
         };
 
@@ -45,6 +45,9 @@ impl Analysis<BitLanguage> for VerilogGeneration {
                 (name, 0, String::default())
             }
             BitLanguage::Mul([_a,b,c]) => {
+                return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));
+            }
+            BitLanguage::MulNW([b,c]) => {
                 return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));
             }
             BitLanguage::Slc([a,b,c]) => {
@@ -130,6 +133,8 @@ fn bitlanguage_to_name(enode: &BitLanguage) -> String {
         BitLanguage::Cct(_)  => String::from("concat"),
         BitLanguage::Num(_)  => String::from(""),
         BitLanguage::Symbol(_)  => String::from(""),
+        BitLanguage::Mul4(_)  => String::from("mul4"),
+        BitLanguage::MulNW(_)  => String::from("mulnw"),
         _                    => {
             println!("Paniced: {}", enode);
             String::from("panic")}

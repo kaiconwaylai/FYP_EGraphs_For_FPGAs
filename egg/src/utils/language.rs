@@ -6,6 +6,7 @@ define_language! {
         "+" = AddW([Id; 3]),
         "*" = MulNW([Id; 2]),
         "*" = Mul([Id; 3]),
+        "*" = Mul4([Id; 4]),
         "-" = Sub([Id; 2]),
         "-" = SubW([Id; 3]),
         "slice" = Slc([Id; 3]),
@@ -78,7 +79,11 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
             let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
             let z1;
             if bw_val < 36 {
-                z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+1, mul_width = bw_val/2);
+                if bw_val % 2 == 1 {
+                    z1 = format!("(+ {add_width} (* {xhi} {ylo}) (* {xlo} {yhi}))", add_width = bw_val+2);
+                } else {
+                    z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+2, mul_width = bw_val/2);
+                }
             } else {            
                 z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
             }

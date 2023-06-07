@@ -9,8 +9,6 @@ use utils::{language::*,costs::*, codegen::*};
 
 static mut INPUT_BW : u64 = 1024;
 fn main() -> std::io::Result<()> {
-    use std::time::Instant;
-    let now = Instant::now();
     let args: Vec<_> = env::args().collect();
     if args.len() > 1 {
         unsafe {
@@ -55,11 +53,6 @@ fn main() -> std::io::Result<()> {
             break;
         }
     }
-
-
-
-    let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}", elapsed);
 
     Ok(())
 }

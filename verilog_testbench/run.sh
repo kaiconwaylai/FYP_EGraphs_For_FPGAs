@@ -12,10 +12,10 @@ OUT_SIM_SNAPSHOT="mult"
 XSI_INCLUDE_DIR="$VIVADO_BIN_DIR/../data/xsim/include"
 GCC_COMPILER="/usr/bin/g++"
 XSIM_ELAB="xelab"
-OUT_EXE="run_simulation"
+OUT_EXE="run_sim"
 
 # Start clean
-#rm -rf xsim.dir xsim.log xelab* $OUT_EXE
+rm -rf xsim.dir xsim.log xelab* $OUT_EXE
 
 # Compile the HDL design into a simulatable Shared Library
 /mnt/applications/Xilinx/20.1/Vivado/2020.1/bin/xelab work.mult -prj mult.prj -dll -s mult -debug wave

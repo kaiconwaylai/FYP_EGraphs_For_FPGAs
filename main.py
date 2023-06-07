@@ -1,6 +1,9 @@
 import subprocess
 import os
 import shutil
+import linecache
+import csv
+import xml.dom.minidom
 
 cur_dir = os.getcwd()
 egg_exe = cur_dir + "/egg/run_egg.sh"
@@ -26,15 +29,26 @@ def run_testing(bw):
     os.chdir(cur_dir)
     process.wait()
 
+def extract_data(path):
+    doc = xml.dom.minidom.parse(path)
+    for sec in doc.getElementsByTagName('section'):
+        if sec.getAttribute("title") == "CLB Logic":
+            CLB = sec
+        elif sec.getAttribute("title") == "ARITHMETIC":
+            ARITHMETIC = sec
+
+    LUTs = (CLB.childNodes[1].childNodes[5].childNodes[3].getAttribute('contents'))
+    DSPs = (ARITHMETIC.childNodes[1].childNodes[3].childNodes[3].getAttribute('contents'))
+
+    return int(LUTs), int(DSPs)
 
 def main():
     if not os.path.exists('./tmp'):
         os.mkdir('tmp')
     open('tmp/mult.v','w')
 
-    for bw in range(123, 124):
+    for bw in range(32, 128):
         run_egg(bw)
-        print("egg ran\n")
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)
             if not os.path.isfile(fname):
@@ -43,6 +57,10 @@ def main():
             shutil.copyfile(fname, synthesis_v_src)
             run_testing(bw)
             run_synth(bw)
+            luts, dsps = extract_data('tmp/synth.xml')
+            with open('data.csv', 'a') as os:
+                writer = csv.writer(os)
+                writer.writerow([bw, LUTs, DSPs])
 
 
 

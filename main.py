@@ -58,11 +58,9 @@ def main():
             run_testing(bw)
             run_synth(bw)
             luts, dsps = extract_data('tmp/synth.xml')
-            with open('data.csv', 'a') as os:
-                writer = csv.writer(os)
-                writer.writerow([bw, LUTs, DSPs])
-
-
+            with open('data.csv', 'a') as ostream:
+                writer = csv.writer(ostream)
+                writer.writerow([bw, luts, dsps])
 
 
 

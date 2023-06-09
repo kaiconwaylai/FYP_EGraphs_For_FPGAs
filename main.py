@@ -47,7 +47,7 @@ def main():
         os.mkdir('tmp')
     open('tmp/mult.v','w')
 
-    for bw in range(32, 128):
+    for bw in range(128, 256):
         run_egg(bw)
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)

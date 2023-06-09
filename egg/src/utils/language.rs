@@ -34,11 +34,11 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
                 bw_2 : var("?bw2"),
             }
         }),
-        // rewrite!("slice_rewrite"; "(* ?bw ?x ?y)" => {
-        //     SliceRewrite {
-        //         bw : var("?bw"),
-        //     }
-        // }), 119 -> 78 41
+        rewrite!("slice_rewrite"; "(* ?bw ?x ?y)" => {
+            SliceRewrite {
+                bw : var("?bw"),
+            }
+        }),
         ]
 }
 
@@ -69,32 +69,32 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
                 break;
             }
         }
-        let karatsuba_string; 
         if bw_val < 10 {
-            karatsuba_string = String::from("(* ?bw ?x ?y)");
-        } else {
-            let msb = ((bw_val/2)-1).to_string();
-            let xlo = format!("(slice ?x {msb} 0)");
-            let ylo = format!("(slice ?y {msb} 0)");
-            let lsb = bw_val/2;
-            let msb = bw_val-1;
-            let xhi = format!("(slice ?x {msb} {lsb})");
-            let yhi = format!("(slice ?y {msb} {lsb})");
-            let z0 = format!("(* {half_bw} {xlo} {ylo})", half_bw = bw_val/2);
-            let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
-            let z1;
-            if bw_val < 36 {
-                if bw_val % 2 == 1 {
-                    z1 = format!("(+ {add_width} (* {hi_width} {lo_width} {xhi} {ylo}) (* {lo_width} {hi_width} {xlo} {yhi}))", 
-                    add_width = bw_val+1, hi_width = msb-lsb+1, lo_width = bw_val/2);
-                } else {
-                    z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+1, mul_width = bw_val/2);
-                }
-            } else {            
-                z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
+            return vec![];
+        } 
+        let karatsuba_string; 
+
+        let msb = ((bw_val/2)-1).to_string();
+        let xlo = format!("(slice ?x {msb} 0)");
+        let ylo = format!("(slice ?y {msb} 0)");
+        let lsb = bw_val/2;
+        let msb = bw_val-1;
+        let xhi = format!("(slice ?x {msb} {lsb})");
+        let yhi = format!("(slice ?y {msb} {lsb})");
+        let z0 = format!("(* {half_bw} {xlo} {ylo})", half_bw = bw_val/2);
+        let z2 = format!("(* {half_bw} {xhi} {yhi})", half_bw = bw_val - (bw_val/2));
+        let z1;
+        if bw_val < 36 {
+            if bw_val % 2 == 1 {
+                z1 = format!("(+ {add_width} (* {hi_width} {lo_width} {xhi} {ylo}) (* {lo_width} {hi_width} {xlo} {yhi}))", 
+                add_width = bw_val+1, hi_width = msb-lsb+1, lo_width = bw_val/2);
+            } else {
+                z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+1, mul_width = bw_val/2);
             }
-            karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); // add_width is a hack with the +1
+        } else {            
+            z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
         }
+        karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); 
 
         let (from, did_something) = egraph.union_instantiations(
             &"(* ?bw ?x ?y)".parse().unwrap(),
@@ -133,28 +133,25 @@ impl Applier<BitLanguage, ()> for SliceRewrite {
                 break;
             }
         }
-        // Compute Karasuba String Dynamically 
-        let slice_string; 
-        if bw_val < 36 {
-            slice_string = String::from("(* ?bw ?x ?y)");
-        } else {            
-            let slice_size = 18;
-            let rem_size = bw_val-slice_size;
-            let xlo = format!("(slice ?x {} 0)", slice_size-1);
-            let ylo = format!("(slice ?y {} 0)", slice_size-1);
-            let xhi = format!("(slice ?x {} {})", bw_val-1, slice_size);
-            let yhi = format!("(slice ?y {} {})", bw_val-1, slice_size);
+        if bw_val > 34 || bw_val < 27 {
+            return vec![];
+        }         
 
-            let z2 = format!("(* {} {xhi} {yhi})", rem_size*2);
-            let z0 = format!("(* {} {xlo} {ylo})", slice_size*2);
-            let z1 = format!("(+ (* {bw_val} {xlo} {yhi}) (* {bw_val} {xhi} {ylo}))");
+        let slice_size = 18;
+        let rem_size = bw_val-slice_size;
+        let xlo = format!("(slice ?x {} 0)", slice_size-1);
+        let ylo = format!("(slice ?y {} 0)", slice_size-1);
+        let xhi = format!("(slice ?x {} {})", bw_val-1, slice_size);
+        let yhi = format!("(slice ?y {} {})", bw_val-1, slice_size);
 
-            slice_string = format!("(+ {z2} (+ {z1} {z0}))");
-        }
+        let z0 = format!("(* {} {xlo} {ylo})", slice_size);
+        let z2 = format!("(* {} {xhi} {yhi})", rem_size);
+        let z1 = format!("(- {sub_bw} (- {sub_bw} (* {mul_bw} (+ {add_bw} {xlo} {xhi}) (+ {add_bw} {ylo} {yhi})) {z2}) {z0})"
+                            , mul_bw = 19, add_bw = 19, sub_bw = 39);
+
+        let slice_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {z0_msb} {slice_size})) {z1}) (slice {z0} {ss_sub1} 0))"
+                            , add_width = rem_size*2 + slice_size + 1, ss_sub1 = slice_size-1, z0_msb = slice_size*2 - 1);
         
-        //can clean this up + find solution for odd numbers
-        // End Karatsuba Dynamic Computation
-        // TODO : fill this in!
         let (from, did_something) = egraph.union_instantiations(
             &"(* ?bw ?x ?y)".parse().unwrap(),
             &slice_string.parse().unwrap(),
@@ -162,13 +159,12 @@ impl Applier<BitLanguage, ()> for SliceRewrite {
             rule_name.clone(),
         );
         if did_something {
-            println!("{}", slice_string);
+            println!("I did this: {}", slice_string);
             return vec![from];
         }
         vec![]
     }
 }
-// END
 
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -226,6 +222,7 @@ impl Applier<BitLanguage, ()> for DifferentBW {
 
                 rewrite = format!("(+ (<< {} {z2}) (+ (<< {} {z1}) {z0}))", (half_bw+1)*2, half_bw+1); 
             } else {
+                println!("\n\nNot sure how we get here\n\n");
                 rewrite = String::from("(* ?bw1 ?bw2 ?x ?y)");
             }
         }

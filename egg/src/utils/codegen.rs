@@ -38,15 +38,7 @@ impl Analysis<BitLanguage> for VerilogGeneration {
                 return (name, std::cmp::max(get_bw(b),get_bw(a)) + 1 , format!("{} {} {}", get_name(a), operator, get_name(b)));
             }
             BitLanguage::AddW([a,b,c]) | BitLanguage::SubW([a,b,c]) => {
-                let node = &egraph[*a].nodes[0];
-                if let BitLanguage::Num(x) = node {
-                    let bit_width = *x as u64;
-                    return (name, bit_width, format!("{} {} {}", get_name(b), operator, get_name(c)));
-                }
-                else {
-                    assert!(false);
-                }
-                (name, 0, String::default())
+                return (name, std::cmp::max(get_bw(b),get_bw(a)) + 1, format!("{} {} {}", get_name(b), operator, get_name(c)));
             }
             BitLanguage::Mul([_a,b,c]) => {
                 return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));

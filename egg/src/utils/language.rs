@@ -159,7 +159,6 @@ impl Applier<BitLanguage, ()> for SliceRewrite {
             rule_name.clone(),
         );
         if did_something {
-            println!("I did this: {}", slice_string);
             return vec![from];
         }
         vec![]
@@ -222,7 +221,6 @@ impl Applier<BitLanguage, ()> for DifferentBW {
 
                 rewrite = format!("(+ (<< {} {z2}) (+ (<< {} {z1}) {z0}))", (half_bw+1)*2, half_bw+1); 
             } else {
-                println!("\n\nNot sure how we get here\n\n");
                 rewrite = String::from("(* ?bw1 ?bw2 ?x ?y)");
             }
         }

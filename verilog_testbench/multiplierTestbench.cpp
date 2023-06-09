@@ -2,6 +2,7 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 
 #include "./include/Register.hpp"
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
       std::cout << "\n *** END TESTING ***\n";
 
       if(testsCompleted != testsPassed) {
-         std::ostream myFile("./failed_testing.txt");
+         std::ofstream myFile("./failed_testing.txt");
          myFile << "Failed " << testsCompleted - testsPassed << " tests for bitwidth " << IN1_WIDTH << ". \n";
       }
       

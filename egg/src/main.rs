@@ -47,7 +47,7 @@ fn main() -> std::io::Result<()> {
             
             let mut dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
             write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
-            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. {}\n\n", alpha(-1.0), cost.lut, cost.dsp, best)?;
+            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
             unsafe {
                 generate_verilog(&best, INPUT_BW, &dst);
             }

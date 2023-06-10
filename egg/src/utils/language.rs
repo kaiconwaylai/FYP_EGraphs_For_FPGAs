@@ -210,16 +210,16 @@ impl Applier<BitLanguage, ()> for DifferentBW {
                     half_bw = bw_2_val / 2;
                 }
                 
-                let xlo = format!("(slice ?x {} 0)", half_bw);
-                let ylo = format!("(slice ?y {} 0)", half_bw);
-                let xhi = format!("(slice ?x {} {})", bw_1_val-1, half_bw+1);
-                let yhi = format!("(slice ?y {} {})", bw_2_val-1, half_bw+1);
+                let xlo = format!("(slice ?x {} 0)", half_bw-1);
+                let ylo = format!("(slice ?y {} 0)", half_bw-1);
+                let xhi = format!("(slice ?x {} {})", bw_1_val-1, half_bw);
+                let yhi = format!("(slice ?y {} {})", bw_2_val-1, half_bw);
 
                 let z2 = format!("(* {xhi} {yhi})");
-                let z0 = format!("(* {xlo} {ylo})");
+                let z0 = format!("(* {} {xlo} {ylo})", half_bw);
                 let z1 = format!("(+ (* {xlo} {yhi}) (* {xhi} {ylo}))");
 
-                rewrite = format!("(+ (<< {} {z2}) (+ (<< {} {z1}) {z0}))", (half_bw+1)*2, half_bw+1); 
+                rewrite = format!("(+ (<< {} {z2}) (+ (<< {} {z1}) {z0}))", (half_bw)*2, half_bw); 
             } else {
                 rewrite = String::from("(* ?bw1 ?bw2 ?x ?y)");
             }

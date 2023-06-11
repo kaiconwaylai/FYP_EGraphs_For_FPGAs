@@ -40,6 +40,7 @@ fn main() -> std::io::Result<()> {
     for i in 0..101 {
         alpha(i as f64/1000.0);
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
+        lp_extractor.timeout(300.0);
         let best_sol = lp_extractor.solve(root);
         let best = best_sol.to_string();
         if unique_solutions.insert(best.clone()) {

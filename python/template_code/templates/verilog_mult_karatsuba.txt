@@ -13,5 +13,5 @@ module mult(
     wire[((${IN2_WIDTH} + ${IN1_WIDTH}) / 2) - 1 :0] z0 = a0 * b0;
     wire[(${IN2_WIDTH} + ${IN1_WIDTH}) / 2 : 0] z1 = ((a1 + a0) * (b1 + b0)) - z2 - z0;
 
-    assign out = (z2 << ((${IN2_WIDTH} + ${IN1_WIDTH})/2)) + (z1 << ((${IN2_WIDTH} + ${IN1_WIDTH})/4)) + z0;
+    assign out = {{z2, z0[${IN2_WIDTH}-1:${IN2_WIDTH}/2]} + z1, z0[${IN2_WIDTH}/2-1:0]};
 endmodule

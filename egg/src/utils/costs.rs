@@ -170,9 +170,6 @@ pub struct FPGACostFunction<'a> {
     pub seen_nodes: HashSet<String>,
 }
 
-// solely used to try and get the cost of a given expression
-// doesn't quite work rn because it recounts reused nodes
-// it also is weird with the way it finds bw in children nodes
 impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     type Cost = fpga::Cost;
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
@@ -856,7 +853,7 @@ pub fn mul_cost_2(width_1 : i32, width_2 : i32) -> fpga::Cost {
             let cost_again = mul_costs.get(&(width_2, width_1));
             match cost_again {
                 Some(x) => return *x,
-                None => return fpga::Cost{dsp: 4, lut: 50}
+                None => return mul_cost(std::cmp::max(width_1, width_2))
             }
         }
     }

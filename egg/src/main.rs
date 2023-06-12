@@ -37,8 +37,8 @@ fn main() -> std::io::Result<()> {
 
     let mut unique_solutions = HashSet::new();
 
-    let iterations = 100;
-    let step = 1000.0;
+    let iterations = 1000;
+    let step = 10000.0;
     let cbc_timeout = 300.0;
 
     for i in 0..iterations+1 {

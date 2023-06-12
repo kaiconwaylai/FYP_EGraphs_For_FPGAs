@@ -37,18 +37,22 @@ fn main() -> std::io::Result<()> {
 
     let mut unique_solutions = HashSet::new();
 
-    for i in 0..101 {
-        alpha(i as f64/1000.0);
+    let iterations = 100;
+    let step = 1000.0;
+    let cbc_timeout = 300.0;
+
+    for i in 0..iterations+1 {
+        alpha(Some(i as f64/step));
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
-        lp_extractor.timeout(300.0);
+        lp_extractor.timeout(cbc_timeout);
         let best_sol = lp_extractor.solve(root);
         let best = best_sol.to_string();
         if unique_solutions.insert(best.clone()) {
             let cost = FPGACostFunction::cost_rec(&mut FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()},&best_sol);
             
             let mut dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
-            write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
-            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
+            write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(None), cost.lut, cost.dsp)?;
+            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
             unsafe {
                 generate_verilog(&best, INPUT_BW, &dst);
             }

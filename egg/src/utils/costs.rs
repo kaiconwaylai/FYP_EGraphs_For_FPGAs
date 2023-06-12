@@ -148,13 +148,20 @@ pub fn mul_cost(width : i32) -> fpga::Cost {
     }
 }
 
-pub fn alpha(val : f64) -> f64 {
+pub fn alpha(val : Option<f64>) -> f64 {
     static mut ALPHA : f64 = 0.0;
-    unsafe {
-        if 0.0 <= val && val <= 1.0 {
-            ALPHA = val;
+    match val {
+        Some(x) => {
+            unsafe {
+                if 0.0 <= x && x <= 1.0 {
+                    ALPHA = x;
+                }
+                ALPHA
+            }
         }
-        ALPHA
+        None => unsafe {
+            ALPHA
+        },
     }
 }
 
@@ -234,7 +241,7 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
                         let node = &egraph[*child].nodes[0];
                         if let BitLanguage::Num(x) = node {
                             let cost = mul_cost(*x);
-                            let node_cost = (1.0-alpha(-1.0)) * cost.dsp as f64 + alpha(-1.0) * cost.lut as f64;
+                            let node_cost = (1.0-alpha(None)) * cost.dsp as f64 + alpha(None) * cost.lut as f64;
                             return node_cost;
                         }
                     } 
@@ -244,7 +251,7 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
                     if let BitLanguage::Num(x) = node_a {
                         if let BitLanguage::Num(y) = node_b {
                             let cost = mul_cost_2(*x,*y);
-                            let node_cost = (1.0-alpha(-1.0)) * cost.dsp as f64 + alpha(-1.0) * cost.lut as f64;
+                            let node_cost = (1.0-alpha(None)) * cost.dsp as f64 + alpha(None) * cost.lut as f64;
                             return node_cost;
                         }
                     }
@@ -256,7 +263,7 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
                     let node = &egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
                         let bit_width = *x as f64;
-                        return bit_width * alpha(-1.0);
+                        return bit_width * alpha(None);
                     }
                 }
                 0.0
@@ -266,7 +273,7 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
                     let node = &egraph[*a].nodes[0];
                     if let BitLanguage::Num(x) = node {
                         let bit_width = *x as f64;
-                        return bit_width * alpha(-1.0);
+                        return bit_width * alpha(None);
                     }
                 }
                 0.0

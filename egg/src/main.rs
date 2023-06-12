@@ -28,14 +28,19 @@ fn main() -> std::io::Result<()> {
     let mut results = fs::File::create("./output/results.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
-    let runner = Runner::default().with_expr(&expr).run(&make_rules());
+    let runner = Runner::default()
+        .with_iter_limit(100)
+        .with_node_limit(25000)
+        .with_expr(&expr)
+        .run(&make_rules());
     let root: Id = runner.roots[0];
 
     let mut unique_solutions = HashSet::new();
 
     for i in 0..101 {
-        alpha(i as f64/500.0);
+        alpha(i as f64/1000.0);
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
+        lp_extractor.timeout(300.0);
         let best_sol = lp_extractor.solve(root);
         let best = best_sol.to_string();
         if unique_solutions.insert(best.clone()) {
@@ -43,7 +48,7 @@ fn main() -> std::io::Result<()> {
             
             let mut dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
             write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
-            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
+            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(-1.0), cost.lut, cost.dsp)?;
             unsafe {
                 generate_verilog(&best, INPUT_BW, &dst);
             }

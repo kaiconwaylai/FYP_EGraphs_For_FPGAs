@@ -26,29 +26,31 @@ impl Analysis<BitLanguage> for VerilogGeneration {
         let name = format!("{}_{}", enode_name, egraph.classes().len());
 
         let operator = match enode {
-            BitLanguage::AddW(_) => "+",
-            BitLanguage::SubW(_) => "-",
-            BitLanguage::Mul(_) | BitLanguage::MulNW(_) => "*",
+            BitLanguage::AddW(_) | BitLanguage::Add(_) => "+",
+            BitLanguage::SubW(_) | BitLanguage::Sub(_) => "-",
+            BitLanguage::Lsl(_) => "<<",
+            BitLanguage::Mul(_) | BitLanguage::MulNW(_) | BitLanguage::Mul4(_) => "*",
             _ => ""
         };
 
         match enode {
+            BitLanguage::Add([a,b]) | BitLanguage::Sub([a,b]) => {
+                return (name, std::cmp::max(get_bw(b),get_bw(a)) + 1 , format!("{} {} {}", get_name(a), operator, get_name(b)));
+            }
             BitLanguage::AddW([a,b,c]) | BitLanguage::SubW([a,b,c]) => {
-                let node = &egraph[*a].nodes[0];
-                if let BitLanguage::Num(x) = node {
-                    let bit_width = *x as u64;
-                    return (name, bit_width, format!("{} {} {}", get_name(b), operator, get_name(c)));
-                }
-                else {
-                    assert!(false);
-                }
-                (name, 0, String::default())
+                return (name, std::cmp::max(get_bw(b),get_bw(a)) + 1, format!("{} {} {}", get_name(b), operator, get_name(c)));
             }
             BitLanguage::Mul([_a,b,c]) => {
                 return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));
             }
             BitLanguage::MulNW([b,c]) => {
                 return (name, get_bw(b) + get_bw(c), format!("{} {} {}", get_name(b), operator, get_name(c)));
+            }
+            BitLanguage::Mul4([_a,_b,c,d]) => {
+                return (name, get_bw(c) + get_bw(d), format!("{} {} {}", get_name(c), operator, get_name(d)));
+            }
+            BitLanguage::Lsl([a,b]) => {
+                return (name, get_bw(a) + get_bw(b), format!("{} {} {}", get_name(b), operator, get_name(a)));
             }
             BitLanguage::Slc([a,b,c]) => {
                 let msb_node = &egraph[*b].nodes[0];
@@ -74,6 +76,9 @@ impl Analysis<BitLanguage> for VerilogGeneration {
                 unsafe {
                     (a.to_string(), INPUT_BW, a.to_string())
                 }
+            }
+            BitLanguage::Num(x) => {
+                (x.to_string(), *x as u64, x.to_string())
             }
             _ => (name, 32, String::default())
         }
@@ -131,10 +136,11 @@ fn bitlanguage_to_name(enode: &BitLanguage) -> String {
         BitLanguage::Sub(_)  => String::from("sub"),
         BitLanguage::Slc(_)  => String::from("slice"),
         BitLanguage::Cct(_)  => String::from("concat"),
-        BitLanguage::Num(_)  => String::from(""),
         BitLanguage::Symbol(_)  => String::from(""),
         BitLanguage::Mul4(_)  => String::from("mul4"),
         BitLanguage::MulNW(_)  => String::from("mulnw"),
+        BitLanguage::Lsl(_)  => String::from("lsl"),
+        BitLanguage::Num(_x)  => String::from("num"),
         _                    => {
             println!("Paniced: {}", enode);
             String::from("panic")}

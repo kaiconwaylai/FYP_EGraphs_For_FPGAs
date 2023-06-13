@@ -23,10 +23,10 @@ def run_vivado():
     process.wait()
 
 def main():
-    default_multiply = CodeTemplate("template_code/templates/verilog_mult")
+    default_multiply = CodeTemplate("template_code/templates/verilog_mult_karatsuba")
     data = []
     mySet = {(0,0)}
-    for IN2 in range(40,129):
+    for IN2 in range(18,129):
         for IN1 in range(IN2,IN2+1):
             if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
                 continue 
@@ -35,6 +35,7 @@ def main():
             default_multiply.write_code('tmp/mult.v')
             run_vivado()
             LUTs, DSPs = extract_data('tmp/synth.xml')
+            print("Width:{}, LUTS:{}, DSPs:{}".format(IN1,LUTs,DSPs))
             data.append([IN2, IN1, LUTs, DSPs])
             with open('data.csv', 'a') as os:
                 writer = csv.writer(os)

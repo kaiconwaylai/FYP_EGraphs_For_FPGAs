@@ -16,6 +16,12 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    let runner_iteration_limit = 100;
+    let egraph_node_limit = 25000;
+    let iterations = 100;
+    let step = 1.0/1000.0;
+    let cbc_timeout = 300.0;
+
     println!("Hello, world!");
     fs::create_dir_all("./output")?;
     fs::remove_dir_all("./output/verilog")?;
@@ -29,20 +35,18 @@ fn main() -> std::io::Result<()> {
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
     let runner = Runner::default()
-        .with_iter_limit(100)
-        .with_node_limit(25000)
+        .with_iter_limit(runner_iteration_limit)
+        .with_node_limit(egraph_node_limit)
         .with_expr(&expr)
         .run(&make_rules());
     let root: Id = runner.roots[0];
 
     let mut unique_solutions = HashSet::new();
 
-    let iterations = 1000;
-    let step = 10000.0;
-    let cbc_timeout = 300.0;
+
 
     for i in 0..iterations+1 {
-        alpha(Some(i as f64/step));
+        alpha(Some(i as f64*step));
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
         lp_extractor.timeout(cbc_timeout);
         let best_sol = lp_extractor.solve(root);

@@ -143,7 +143,7 @@ pub fn mul_cost(width : i32) -> fpga::Cost {
             let bit_width = width as f64;
             let t1 = ((bit_width-9.)/17.).ceil();
             let t2 = ((bit_width-9.)/(17.*t1-5.)).floor();
-            return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: width * 6};    
+            return fpga::Cost{dsp: ((t1).powf(2.0) + t2) as i32, lut: (0.05571*bit_width*bit_width - 1.58571*bit_width + 28.258) as i32};    
         }
     }
 }

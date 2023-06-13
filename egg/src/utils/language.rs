@@ -237,4 +237,3 @@ impl Applier<BitLanguage, ()> for DifferentBW {
         vec![]
     }
 }
-// END

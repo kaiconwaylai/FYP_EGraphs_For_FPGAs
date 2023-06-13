@@ -16,6 +16,12 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    let runner_iteration_limit = 100;
+    let egraph_node_limit = 25000;
+    let iterations = 10000;
+    let step = 100000.0;
+    let cbc_timeout = 300.0;
+
     println!("Hello, world!");
     fs::create_dir_all("./output")?;
     fs::remove_dir_all("./output/verilog")?;
@@ -26,12 +32,6 @@ fn main() -> std::io::Result<()> {
     }
     
     let mut results = fs::File::create("./output/results.txt")?;
-
-    let runner_iteration_limit = 100;
-    let egraph_node_limit = 25000;
-    let iterations = 10000;
-    let step = 100000.0;
-    let cbc_timeout = 300.0;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
     let runner = Runner::default()

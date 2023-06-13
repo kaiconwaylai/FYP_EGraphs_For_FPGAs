@@ -49,7 +49,7 @@ def main():
     make_top_level('./tmp')
     open('tmp/mult.v','w')
 
-    for bw in range(225, 257):
+    for bw in range(512, 513):
         run_egg(bw)
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)

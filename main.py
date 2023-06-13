@@ -67,7 +67,7 @@ def main():
 
 
 def make_top_level(path):
-    with open(path + '/top_level.v') as fs:
+    with open(path + '/top_level.v', 'w') as fs:
         fs.write("`timescale 1ns / 1ps \
                 module top_level( \
                 input clk,\
@@ -77,7 +77,7 @@ def make_top_level(path):
                 reg IN2;\
                 wire OUTPUT;\
                 \
-                (* dont_touch = "yes" *)\
+                (* dont_touch = \"yes\" *)\
                 mult multiplier(\
                     IN1,\
                     IN2,\

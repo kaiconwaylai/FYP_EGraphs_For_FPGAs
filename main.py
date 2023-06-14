@@ -53,6 +53,7 @@ def main():
     
     testing_times = []
     synth_times = []
+    egg_times = []
 
     for bw in [1024]:
         start_egg = time.time()
@@ -71,28 +72,31 @@ def main():
             run_synth(bw)
             end_synth = time.time()
             
-            testing_times.append(end_testing-start_testing)
-            synth_times.append(start_synth-start_synth)
+            testing_times.append((bw,(end_testing-start_testing)))
+            synth_times.append(end_synth-start_synth)
             
             luts, dsps = extract_data('tmp/synth.xml')
             with open('data.csv', 'a') as ostream:
                 writer = csv.writer(ostream)
                 writer.writerow([bw, luts, dsps])
-
+        egg_times.append((bw,end_egg-start_egg))
+        
     end_prog = time.time()
-    egg_time =  end_egg - start_egg
     prog_time = end_prog - start_prog
+    
     with open('times.txt', 'w') as fs:
-        fs.write("egg execution time: {} ".format(egg_time))
-        fs.write("prog execution time: {}\n".format(prog_time))
+        fs.write("prog execution time: {}".format(prog_time))
         total_test = 0
         total_synth = 0
-        for t1,t2 in zip(testing_times, synth_times):
-            fs.write("Test time: {}, Synth time: {}\n".format(t1,t2))
-            total_test += t1
-            total_synth += t2
-        fs.write("Total test time: {} ".format(total_test))
-        fs.write("Total synth time: {}\n".format(total_synth))
+        for (bw,t1),t2 in zip(testing_times, synth_times):
+            fs.write("BW: {}. Test time: {}, Synth time: {}".format(bw, t1,t2))
+            totat_test += t1
+            totat_synth += t2
+        for bw, t in egg_times:
+            fs.write("BW: {}, Egg time: {}".format(bw,t))
+            
+        fs.write("Total test time: {}".format(total_test))
+        fs.write("Total synth time: {}".format(total_synth))
 
 def make_top_level(path):
     with open(path + '/top_level.v', 'w') as fs:

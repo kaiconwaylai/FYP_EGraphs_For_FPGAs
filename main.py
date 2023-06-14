@@ -4,6 +4,7 @@ import shutil
 import linecache
 import csv
 import xml.dom.minidom
+import time
 
 cur_dir = os.getcwd()
 egg_exe = cur_dir + "/egg/run_egg.sh"
@@ -43,28 +44,55 @@ def extract_data(path):
     return int(LUTs), int(DSPs)
 
 def main():
+    start_prog = time.time()
     if not os.path.exists('./tmp'):
         os.mkdir('tmp')
         
     make_top_level('./tmp')
     open('tmp/mult.v','w')
+    
+    testing_times = []
+    synth_times = []
 
     for bw in range(512, 513):
+        start_egg = time.time()
         run_egg(bw)
+        end_egg = time.time()
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)
             if not os.path.isfile(fname):
                 continue
             shutil.copyfile(fname, tb_v_src)
             shutil.copyfile(fname, synthesis_v_src)
+            start_testing = time.time()
             run_testing(bw)
+            end_testing = time.time()
+            start_synth = time.time()
             run_synth(bw)
+            end_synth = time.time()
+            
+            testing_times.append(end_testing-start_testing)
+            synth_times.append(start_synth-start_synth)
+            
             luts, dsps = extract_data('tmp/synth.xml')
             with open('data.csv', 'a') as ostream:
                 writer = csv.writer(ostream)
                 writer.writerow([bw, luts, dsps])
 
-
+    end_prog = time.time()
+    egg_time =  end_egg - start_egg
+    prog_time = end_prog - start_prog
+    with open('times.txt', 'w') as fs:
+        fs.write("egg execution time: {}".format(egg_time))
+        fs.write("prog execution time: {}".format(prog_time))
+        total_test = 0
+        total_synth = 0
+        for t1,t2 in zip(testing_times, synth_times):
+            fs.write("Test time: {}, Synth time: {}".format(t1,t2))
+            totat_test += t1
+            totat_synth += t2
+        fs.write("Total test time: {}".format(total_test))
+        fs.write("Total synth time: {}".format(total_synth))
 
 def make_top_level(path):
     with open(path + '/top_level.v', 'w') as fs:

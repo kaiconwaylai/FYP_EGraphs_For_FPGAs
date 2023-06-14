@@ -45,9 +45,11 @@ def extract_data(path):
 def main():
     if not os.path.exists('./tmp'):
         os.mkdir('tmp')
+        
+    make_top_level('./tmp')
     open('tmp/mult.v','w')
 
-    for bw in range(225, 257):
+    for bw in range(512, 513):
         run_egg(bw)
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)
@@ -64,7 +66,25 @@ def main():
 
 
 
-
+def make_top_level(path):
+    with open(path + '/top_level.v', 'w') as fs:
+        fs.write("`timescale 1ns / 1ps \
+                module top_level( \
+                input clk,\
+                output out\
+                );\
+                reg IN1;\
+                reg IN2;\
+                wire OUTPUT;\
+                \
+                (* dont_touch = \"yes\" *)\
+                mult multiplier(\
+                    IN1,\
+                    IN2,\
+                    OUTPUT\
+                );     \
+            endmodule\
+            ")
 
 if __name__ == "__main__":
     main()

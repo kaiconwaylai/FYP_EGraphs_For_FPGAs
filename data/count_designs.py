@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 
 def main():
 
-    data = pd.read_csv('32-256.csv')
+    data = pd.read_csv('small_Steps.csv')
     
     bw = 32
     # with open('newdadad.txt', 'w') as fs:
@@ -44,26 +44,24 @@ def main():
         normalised = [(x/max_luts, y/max_dsps) for x,y in vals]
         luts, dsps = zip(*normalised)
 
-        if bw < 65:
-            plt.xlabel('DSPs', fontsize=10)
-            plt.ylabel('LUTs', fontsize=10)
-     #       plt.plot(dsps, luts, label = str(bw) + ' bit multiplier', marker='o')
+        plt.xlabel('DSPs', fontsize=10)
+        plt.ylabel('LUTs', fontsize=10)
+        plt.plot(dsps, luts, label = str(bw) + ' bit multiplier', marker='o')
+        plt.legend()
 
 
-    dt = pd.read_csv('newdadad.txt')
-    #dt.plot(kind='line', x='bw',y='score',color='red')
-
-    df = pd.read_csv('512_small_step.csv')
+    df = pd.read_csv('512_more.csv')
     df = df.sort_values(by=['DSPs'])
     print(df)
     ax = df.plot(kind='line', x='DSPs',y='LUTs',color='blue', marker='o', legend=False)
     ax.set_ylabel('LUTs')
     
-    df = pd.read_csv('64_small_step.csv')
-    df = df.sort_values(by=['DSPs'])
-    print(df)
-    ax = df.plot(kind='line', x='DSPs',y='LUTs',color='blue', marker='o', legend=False)
-    ax.set_ylabel('LUTs')
+    # df = pd.read_csv('64_small_step.csv')
+    # df = df.sort_values(by=['DSPs'])
+    # print(df)
+    # ax = df.plot(kind='line', x='DSPs',y='LUTs',color='blue', marker='o', legend=False)
+    # ax.set_ylabel('LUTs')
+    
     plt.show()
 if __name__ == "__main__":
     main()

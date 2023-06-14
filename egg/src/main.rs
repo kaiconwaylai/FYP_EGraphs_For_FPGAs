@@ -18,8 +18,8 @@ fn main() -> std::io::Result<()> {
 
     let runner_iteration_limit = 100;
     let egraph_node_limit = 25000;
-    let iterations = 1000;
-    let step = 1.0/10000.0;
+    let iterations = 100;
+    let step = 1.0/1000.0;
     let cbc_timeout = 300.0;
 
     println!("Hello, world!");

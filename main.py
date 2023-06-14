@@ -80,8 +80,10 @@ def main():
                 writer = csv.writer(ostream)
                 writer.writerow([bw, luts, dsps])
         egg_times.append(bw,end_egg-start_egg)
+        
     end_prog = time.time()
     prog_time = end_prog - start_prog
+    
     with open('times.txt', 'w') as fs:
         fs.write("prog execution time: {}".format(prog_time))
         total_test = 0

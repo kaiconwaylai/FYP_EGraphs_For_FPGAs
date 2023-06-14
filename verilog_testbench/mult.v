@@ -1,4 +1,4 @@
-Alpha = 0.003. Cost: LUTs = 3535. DSPs = 3. 
+Alpha = 0.003. Cost: LUTs = 2321. DSPs = 3. 
 
 `timescale 1ns / 1ps
     module mult(

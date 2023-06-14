@@ -115,7 +115,7 @@ pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs:
         }
     }
 
-    write!(file, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), expr_cost.lut, expr_cost.dsp).expect("File broke");
+    write!(file, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), expr_cost.lut, expr_cost.dsp).expect("File broke");
 
     let module_definition = format!("`timescale 1ns / 1ps
     module mult(

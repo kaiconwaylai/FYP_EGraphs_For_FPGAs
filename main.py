@@ -55,7 +55,7 @@ def main():
     synth_times = []
     egg_times = []
 
-    for bw in [64,128,256]:
+    for bw in [32]:
         start_egg = time.time()
         run_egg(bw)
         end_egg = time.time()
@@ -85,18 +85,22 @@ def main():
     prog_time = end_prog - start_prog
     
     with open('times.txt', 'w') as fs:
-        fs.write("prog execution time: {}".format(prog_time))
+        fs.write("prog execution time: {}\n".format(prog_time))
         total_test = 0
         total_synth = 0
+        total_egg = 0
         for (bw,t1),t2 in zip(testing_times, synth_times):
-            fs.write("BW: {}. Test time: {}, Synth time: {}".format(bw, t1,t2))
-            totat_test += t1
-            totat_synth += t2
+            fs.write("BW: {}. Test time: {}, Synth time: {}\n".format(bw, t1,t2))
+            total_test += t1
+            total_synth += t2
         for bw, t in egg_times:
-            fs.write("BW: {}, Egg time: {}".format(bw,t))
+            total_egg += t
+            fs.write("BW: {}, Egg time: {}\n".format(bw,t))
             
-        fs.write("Total test time: {}".format(total_test))
-        fs.write("Total synth time: {}".format(total_synth))
+        fs.write("Total test time: {}\n".format(total_test))
+        fs.write("Total synth time: {}\n".format(total_synth))
+        fs.write("Non synth / test / egg time: {}\n".format(prog_time-total_test-total_synth-total_egg)
+
 
 def make_top_level(path):
     with open(path + '/top_level.v', 'w') as fs:

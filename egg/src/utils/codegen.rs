@@ -1,4 +1,4 @@
-use super::{language::*, super::INPUT_BW};
+use super::{language::*, super::INPUT_BW,costs::*,fpga::Cost};
 use egg::*;
 use std::fs;
 use std::io::prelude::*;
@@ -80,7 +80,7 @@ impl Analysis<BitLanguage> for VerilogGeneration {
             BitLanguage::Num(x) => {
                 (x.to_string(), *x as u64, x.to_string())
             }
-            _ => (name, 32, String::default())
+            //_ => (name, 32, String::default())
         }
     }
 
@@ -89,24 +89,18 @@ impl Analysis<BitLanguage> for VerilogGeneration {
     }
 }
 
-pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs::File) {
+pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs::File) -> Cost {
     let mut generation_egraph = EGraphVerilogGeneration::default();
     let root = generation_egraph.add_expr(&expr.parse().unwrap());
     let get_name       = |i: &Id| generation_egraph[*i].data.0.clone();
-
-
-    let module_definition = format!("`timescale 1ns / 1ps
-    module mult(
-        input[{bw}:0] IN1,
-        input[{bw}:0] IN2,
-        output[{}:0] OUTPUT
-    );\n", variable_bitwidth*2-1,  bw = variable_bitwidth-1);
-    write!(file, "{}", module_definition).expect("File broke");
+    let mut expr_cost = Cost{dsp: 0, lut: 0};
 
     let mut module_body = String::default();
 
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
+        let node_cost = cost_node(node, &generation_egraph);
+        expr_cost = expr_cost + node_cost;
         match node {
             BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
             _ => module_body.push_str(&format!("wire [{}:0] {};\n", class.data.1 - 1, class.data.0)),
@@ -120,11 +114,23 @@ pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs:
             _ => module_body.push_str(&format!("assign {} = {};\n", class.data.0, class.data.2)),
         }
     }
+
+    write!(file, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), expr_cost.lut, expr_cost.dsp).expect("File broke");
+
+    let module_definition = format!("`timescale 1ns / 1ps
+    module mult(
+        input[{bw}:0] IN1,
+        input[{bw}:0] IN2,
+        output[{}:0] OUTPUT
+    );\n", variable_bitwidth*2-1,  bw = variable_bitwidth-1);
+    write!(file, "{}", module_definition).expect("File broke");
+
     write!(file, "{}", module_body).expect("File broke");
 
     let end_module = format!("assign OUTPUT = {};
     endmodule", get_name(&root));
     write!(file, "{}", end_module).expect("File broke");
+    expr_cost
 }
 
 fn bitlanguage_to_name(enode: &BitLanguage) -> String {
@@ -141,9 +147,9 @@ fn bitlanguage_to_name(enode: &BitLanguage) -> String {
         BitLanguage::MulNW(_)  => String::from("mulnw"),
         BitLanguage::Lsl(_)  => String::from("lsl"),
         BitLanguage::Num(_x)  => String::from("num"),
-        _                    => {
-            println!("Paniced: {}", enode);
-            String::from("panic")}
+        // _                    => {
+        //     println!("Paniced: {}", enode);
+        //     String::from("panic")}
     }
 }
 

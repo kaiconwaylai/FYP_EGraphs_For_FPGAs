@@ -1,7 +1,7 @@
 use egg::*;
 use std::collections::{HashMap,HashSet};
-use crate::utils::fpga;
-use crate::utils::language::*;
+use crate::utils::{fpga, language::*};
+use crate::EGraphVerilogGeneration;
 
 pub fn mul_cost(width : i32) -> fpga::Cost {
     let mul_costs : HashMap<i32, fpga::Cost> = HashMap::from([
@@ -233,14 +233,12 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
         let op_cost = match op.as_str() {
             "*" => {
                 if let BitLanguage::Mul([a,_b,_c]) = enode {
-                    for child in [a,_b,_c] {
-                        let node = &egraph[*child].nodes[0];
-                        if let BitLanguage::Num(x) = node {
-                            let cost = mul_cost(*x);
-                            let node_cost = (1.0-alpha(None)) * cost.dsp as f64 + alpha(None) * cost.lut as f64;
-                            return node_cost;
-                        }
-                    } 
+                    let node = &egraph[*a].nodes[0];
+                    if let BitLanguage::Num(x) = node {
+                        let cost = mul_cost(*x);
+                        let node_cost = (1.0-alpha(None)) * cost.dsp as f64 + alpha(None) * cost.lut as f64;
+                        return node_cost;
+                    }
                 } else if let BitLanguage::Mul4([a,b,_c,_d]) = enode {
                     let node_a = &self.egraph[*a].nodes[0];
                     let node_b = &self.egraph[*b].nodes[0];
@@ -280,6 +278,39 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
     }
 }
 
+pub fn cost_node(enode: &BitLanguage,
+                    egraph: &EGraphVerilogGeneration)
+                 -> fpga::Cost {
+    match enode {
+        BitLanguage::AddW([a,_b,_c]) | BitLanguage::SubW([a,_b,_c]) => {
+            let node = &egraph[*a].nodes[0];
+            if let BitLanguage::Num(x) = node {
+                return fpga::Cost{dsp:0, lut: *x};
+            }
+            fpga::Cost{dsp:0, lut: 0}
+        }
+        BitLanguage::Mul([a,_b,_c]) => {
+            let node = &egraph[*a].nodes[0];
+            if let BitLanguage::Num(x) = node {
+                return mul_cost(*x);
+            }
+            fpga::Cost{dsp:0, lut:0}
+        }
+        BitLanguage::Mul4([a,b,_c,_d]) => {
+            let a_node = &egraph[*a].nodes[0];
+            let b_node = &egraph[*b].nodes[0];
+
+            if let BitLanguage::Num(x) = a_node {
+                if let BitLanguage::Num(y) = b_node {
+                    return mul_cost_2(*x, *y);
+                }
+            }
+            return fpga::Cost{dsp: 0, lut: 0};
+        }
+        _ => fpga::Cost{dsp:0, lut: 0}
+    }
+
+}
 
 
 pub fn mul_cost_2(width_1 : i32, width_2 : i32) -> fpga::Cost {

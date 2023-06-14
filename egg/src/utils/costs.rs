@@ -178,7 +178,6 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     {   
         let op_cost;
         let node_id = enode.to_string();
-        // /println!("Costing node: {}", node_id);
         if !self.seen_nodes.contains(&node_id) {
             self.seen_nodes.insert(enode.to_string());
             

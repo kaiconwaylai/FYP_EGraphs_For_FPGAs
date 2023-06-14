@@ -54,7 +54,7 @@ def main():
     testing_times = []
     synth_times = []
 
-    for bw in [64,128,256]:
+    for bw in [1024]:
         start_egg = time.time()
         run_egg(bw)
         end_egg = time.time()

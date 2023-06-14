@@ -72,14 +72,14 @@ def main():
             run_synth(bw)
             end_synth = time.time()
             
-            testing_times.append(bw,(end_testing-start_testing))
+            testing_times.append((bw,(end_testing-start_testing)))
             synth_times.append(end_synth-start_synth)
             
             luts, dsps = extract_data('tmp/synth.xml')
             with open('data.csv', 'a') as ostream:
                 writer = csv.writer(ostream)
                 writer.writerow([bw, luts, dsps])
-        egg_times.append(bw,end_egg-start_egg)
+        egg_times.append((bw,end_egg-start_egg))
         
     end_prog = time.time()
     prog_time = end_prog - start_prog

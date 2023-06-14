@@ -55,6 +55,7 @@ def main():
     synth_times = []
     egg_times = []
 
+
     for bw in [32]:
         start_egg = time.time()
         run_egg(bw)

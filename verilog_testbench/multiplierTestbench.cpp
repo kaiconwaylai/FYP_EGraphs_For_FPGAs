@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <ctime>
 
 #include "./include/Register.hpp"
 #include "./include/testValues.hpp"
@@ -13,6 +14,7 @@
 std::string getcurrentdir();
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
 
    unsigned IN1_WIDTH;
    if(argc > 1) {

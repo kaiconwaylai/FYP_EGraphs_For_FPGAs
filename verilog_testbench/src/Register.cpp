@@ -2,7 +2,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <algorithm>
 #include <cmath>
-#include<ctime>
+#include <ctime>
 
 
 void Input::setValue(unsigned val) {
@@ -41,10 +41,9 @@ void Input::setValue(const std::string& val) {
 }
 
 void Input::randomiseValue() {
-    srand(time(0));
     std::string newVal(width, 0);
     for(char& i : newVal) {
-        if(rand()%2) {
+        if(rand()%2 == 0) {
             i = '1';
         } else {
             i = '0';

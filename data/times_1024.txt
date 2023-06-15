@@ -1,0 +1,14 @@
+egg execution time: 3341.159872531891 prog execution time: 13940.670507192612
+Test time: 23.4769606590271, Synth time: 0.0
+Test time: 21.130149126052856, Synth time: 0.0
+Test time: 22.7719464302063, Synth time: 0.0
+Test time: 8.094391822814941, Synth time: 0.0
+Test time: 11.385557651519775, Synth time: 0.0
+Test time: 10.122504949569702, Synth time: 0.0
+Test time: 20.59066915512085, Synth time: 0.0
+Test time: 22.383799076080322, Synth time: 0.0
+Test time: 8.04881739616394, Synth time: 0.0
+Test time: 21.950602531433105, Synth time: 0.0
+Test time: 9.327032089233398, Synth time: 0.0
+Test time: 21.49695372581482, Synth time: 0.0
+Total test time: 200.7793846130371 Total synth time: 0.0

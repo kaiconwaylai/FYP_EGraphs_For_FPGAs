@@ -39,6 +39,12 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
                 bw : var("?bw"),
             }
         }),
+        // rewrite!("32-tiling-3dsps"; "(* 32 ?x ?y)" => {
+        //     TilingRewrite{}
+        // }),
+        // rewrite!("32-tiling-2dsps"; "(* 32 ?x ?y)" => {
+        //     TilingRewrite2{}
+        // }),
         ]
 }
 
@@ -237,3 +243,89 @@ impl Applier<BitLanguage, ()> for DifferentBW {
         vec![]
     }
 }
+
+
+// #[derive(Debug, Clone, PartialEq, Eq)]
+// pub struct TilingRewrite {
+// }
+
+// impl Applier<BitLanguage, ()> for TilingRewrite {
+//     fn apply_one(
+//         &self,
+//         egraph: &mut EGraph<BitLanguage, ()>,
+//         _matched_id: Id,
+//         subst: &Subst,
+//         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+//         rule_name: Symbol,
+//     ) -> Vec<Id> {
+                
+
+//                 let x_1 = format!("(slice ?x 5 0)"); 
+//                 let x_2 = format!("(slice ?x 31 6)"); 
+
+//                 let y_1 = format!("(slice ?y 8 0)"); 
+//                 let y_2 = format!("(slice ?y 31 9)"); 
+//                 let y_3 = format!("(slice ?y 17 0)"); 
+//                 let y_4 = format!("(slice ?y 31 18)"); 
+
+//                 let z0 = format!("(* 6 9 {x_1} {y_1})");
+//                 let z1 = format!("(* 6 23 {x_1} {y_2})");
+//                 let z2 = format!("(* 26 18 {x_2} {y_3})");
+//                 let z3 = format!("(* 26 14 {x_2} {y_4})");
+
+//                 let rewrite = format!("(+ 65 (<< {z3} 24) (+ 51 (<< {z2} 6) (+ 39 (<< {z1} 9) {z0})))");
+//         }
+//         let (from, did_something) = egraph.union_instantiations(
+//             &"(* ?bw1 ?bw2 ?x ?y)".parse().unwrap(),
+//             &rewrite.parse().unwrap(),
+//             subst,
+//             rule_name.clone(),
+//         );
+//         if did_something {
+//             return vec![from];
+//         }
+//         vec![]
+//     }
+// }
+
+
+// impl Applier<BitLanguage, ()> for TilingRewrite_2 {
+//     fn apply_one(
+//         &self,
+//         egraph: &mut EGraph<BitLanguage, ()>,
+//         _matched_id: Id,
+//         subst: &Subst,
+//         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+//         rule_name: Symbol,
+//     ) -> Vec<Id> {
+                
+
+//                 let x_1 = format!("(slice ?x 5 0)"); 
+//                 let x_2 = format!("(slice ?x 31 6)"); 
+
+//                 let y_1 = format!("(slice ?y 7 0)"); 
+//                 let y_2 = format!("(slice ?y 15 8)"); 
+//                 let y_3 = format!("(slice ?y 23 16)"); 
+//                 let y_4 = format!("(slice ?y 31 24)"); 
+
+//                 let z0 = format!("(* 26 32 {x_1} ?y)");
+//                 let z1 = format!("(* 6 8 {x_1} {y_1})");
+//                 let z2 = format!("(* 6 8 {x_1} {y_2})");
+//                 let z3 = format!("(* 6 8 {x_1} {y_3})");
+//                 let z4 = format!("(* 6 8 {x_1} {y_4})");
+
+//                 let rewrite = format!("(+ 64 {z0} (+ 39 (<< {z4} 24) (+ 31 (<< {z3} 16) (+ 23 (<< {z2} 8) {z0}))) )");
+//         }
+        
+//         let (from, did_something) = egraph.union_instantiations(
+//             &"(* ?bw1 ?bw2 ?x ?y)".parse().unwrap(),
+//             &rewrite.parse().unwrap(),
+//             subst,
+//             rule_name.clone(),
+//         );
+//         if did_something {
+//             return vec![from];
+//         }
+//         vec![]
+//     }
+// }

@@ -18,7 +18,7 @@ fn main() -> std::io::Result<()> {
 
     let runner_iteration_limit = 100;
     let egraph_node_limit = 25000;
-    let iterations = 100;
+    let iterations = 1000;
     let step = 1.0/1000.0;
     let cbc_timeout = 300.0;
 
@@ -32,6 +32,11 @@ fn main() -> std::io::Result<()> {
     }
     
     let mut results = fs::File::create("./output/results.txt")?;
+    let mut costs = fs::OpenOptions::new()
+                        .write(true)
+                        .create(true)
+                        .append(true)
+                        .open("./output/costs.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
     let runner = Runner::default()
@@ -43,22 +48,21 @@ fn main() -> std::io::Result<()> {
 
     let mut unique_solutions = HashSet::new();
 
-
-
     for i in 0..iterations+1 {
         alpha(Some(i as f64*step));
         let mut lp_extractor = LpExtractor::new(&runner.egraph, FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()});
         lp_extractor.timeout(cbc_timeout);
         let best_sol = lp_extractor.solve(root);
         let best = best_sol.to_string();
-        if unique_solutions.insert(best.clone()) {
-            let cost = FPGACostFunction::cost_rec(&mut FPGACostFunction{egraph: &runner.egraph, seen_nodes: HashSet::new()},&best_sol);
-            
-            let mut dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
-            write!(dst, "//Alpha = {}. Cost: LUTs = {}. DSPs = {}.  \n\n", alpha(None), cost.lut, cost.dsp)?;
+        if unique_solutions.insert(best.clone()) {            
+            let dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
+            let cost;            
+            unsafe {
+                cost = generate_verilog(&best, INPUT_BW, &dst);
+            }
             write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
             unsafe {
-                generate_verilog(&best, INPUT_BW, &dst);
+                writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
             }
         }
 

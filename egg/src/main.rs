@@ -3,6 +3,7 @@ use std::fs;
 use std::env;
 use std::io::prelude::*;
 use std::collections::HashSet;
+use std::time::{Duration,Instant};
 
 mod utils;
 use utils::{language::*,costs::*, codegen::*};
@@ -16,10 +17,10 @@ fn main() -> std::io::Result<()> {
         }
     }
 
-    let runner_iteration_limit = 100;
-    let egraph_node_limit = 25000;
-    let iterations = 1000;
-    let step = 1.0/1000.0;
+    let runner_iteration_limit = 10000000;
+    let egraph_node_limit = 25000000000;
+    let iterations = 10;
+    let step = 1.0/10.0;
     let cbc_timeout = 300.0;
 
     println!("Hello, world!");
@@ -39,11 +40,19 @@ fn main() -> std::io::Result<()> {
                         .open("./output/costs.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
+
+    let start = Instant::now();
     let runner = Runner::default()
         .with_iter_limit(runner_iteration_limit)
         .with_node_limit(egraph_node_limit)
+        .with_time_limit(Duration::new(100000, 0))
         .with_expr(&expr)
         .run(&make_rules());
+    let duration = start.elapsed();
+
+    write!(results, "Runner stopped: {:?}. Time take for runner: {:?}, Classes: {}, Nodes: {}, Size: {}\n\n",
+            runner.stop_reason, duration, runner.egraph.number_of_classes(),
+            runner.egraph.total_number_of_nodes(), runner.egraph.total_size())?;
     let root: Id = runner.roots[0];
 
     let mut unique_solutions = HashSet::new();
@@ -56,13 +65,13 @@ fn main() -> std::io::Result<()> {
         let best = best_sol.to_string();
         if unique_solutions.insert(best.clone()) {            
             let dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
-            let cost;            
+            //let cost;            
             unsafe {
-                cost = generate_verilog(&best, INPUT_BW, &dst);
+               // cost = generate_verilog(&best, INPUT_BW, &dst);
             }
-            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
+            //write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
             unsafe {
-                writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
+              //  writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
             }
         }
 

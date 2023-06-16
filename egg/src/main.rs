@@ -65,13 +65,13 @@ fn main() -> std::io::Result<()> {
         let best = best_sol.to_string();
         if unique_solutions.insert(best.clone()) {            
             let dst = fs::File::create(format!("./output/verilog/mult_{i}.v", ))?;
-            //let cost;            
+            let cost;            
             unsafe {
-               // cost = generate_verilog(&best, INPUT_BW, &dst);
+                cost = generate_verilog(&best, INPUT_BW, &dst);
             }
-            //write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
+            write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
             unsafe {
-              //  writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
+                writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
             }
         }
 

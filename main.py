@@ -20,7 +20,7 @@ def run_egg(bw):
     os.chdir(cur_dir)
     process.wait()
 
-def run_synth(bw):
+def run_synth():
     process = subprocess.Popen(['sh', synthesise])
     process.wait()
 
@@ -51,76 +51,41 @@ def main():
     make_top_level('./tmp')
     open('tmp/mult.v','w')
     
-    testing_times = []
-    synth_times = []
-    egg_times = []
-
-
     for bw in [32]:
-        start_egg = time.time()
         run_egg(bw)
-        end_egg = time.time()
         for filename in os.listdir(egg_output):
             fname = os.path.join(egg_output, filename)
             if not os.path.isfile(fname):
                 continue
             shutil.copyfile(fname, tb_v_src)
             shutil.copyfile(fname, synthesis_v_src)
-            start_testing = time.time()
             run_testing(bw)
-            end_testing = time.time()
-            start_synth = time.time()
-            run_synth(bw)
-            end_synth = time.time()
-            
-            testing_times.append((bw,(end_testing-start_testing)))
-            synth_times.append(end_synth-start_synth)
+            run_synth()
             
             luts, dsps = extract_data('tmp/synth.xml')
             with open('data.csv', 'a') as ostream:
                 writer = csv.writer(ostream)
                 writer.writerow([bw, luts, dsps])
-        egg_times.append((bw,end_egg-start_egg))
         
-    end_prog = time.time()
-    prog_time = end_prog - start_prog
-    
-    with open('times.txt', 'w') as fs:
-        fs.write("prog execution time: {}\n".format(prog_time))
-        total_test = 0
-        total_synth = 0
-        total_egg = 0
-        for (bw,t1),t2 in zip(testing_times, synth_times):
-            fs.write("BW: {}. Test time: {}, Synth time: {}\n".format(bw, t1,t2))
-            total_test += t1
-            total_synth += t2
-        for bw, t in egg_times:
-            total_egg += t
-            fs.write("BW: {}, Egg time: {}\n".format(bw,t))
-            
-        fs.write("Total test time: {}\n".format(total_test))
-        fs.write("Total synth time: {}\n".format(total_synth))
-        fs.write("Non synth / test / egg time: {}\n".format(prog_time-total_test-total_synth-total_egg))
-
 
 def make_top_level(path):
     with open(path + '/top_level.v', 'w') as fs:
-        fs.write("`timescale 1ns / 1ps \
-                module top_level( \
-                input clk,\
-                output out\
-                );\
-                reg IN1;\
-                reg IN2;\
-                wire OUTPUT;\
-                \
-                (* dont_touch = \"yes\" *)\
-                mult multiplier(\
-                    IN1,\
-                    IN2,\
-                    OUTPUT\
-                );     \
-            endmodule\
+        fs.write("`timescale 1ns / 1ps \n\
+module top_level( \n\
+    input clk,\n\
+    output out\n\
+    );\n\
+    reg IN1;\n\
+    reg IN2;\n\
+    wire OUTPUT;\n\
+                \n\
+    (* dont_touch = \"yes\" *)\n\
+    mult multiplier(\n\
+        IN1,\n\
+        IN2,\n\
+        OUTPUT\n\
+        );     \n\
+endmodule\
             ")
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ use egg::*;
 use std::fs;
 use std::io::prelude::*;
 
-
 pub type EGraphVerilogGeneration = egg::EGraph<BitLanguage, VerilogGeneration>;
 
 #[derive(Default)]
@@ -63,9 +62,6 @@ impl Analysis<BitLanguage> for VerilogGeneration {
                         return (name, msb-lsb+1, format!("{}[{}:{}]", get_name(a), msb, lsb));
                     }
                 }
-                else {
-                    assert!(false);
-                }
                 (name, 0, String::default())
             }
             BitLanguage::Cct([a,b]) => {
@@ -80,7 +76,6 @@ impl Analysis<BitLanguage> for VerilogGeneration {
             BitLanguage::Num(x) => {
                 (x.to_string(), *x as u64, x.to_string())
             }
-            //_ => (name, 32, String::default())
         }
     }
 
@@ -92,15 +87,17 @@ impl Analysis<BitLanguage> for VerilogGeneration {
 pub fn generate_verilog(expr : &String, variable_bitwidth : u64, mut file : &fs::File) -> Cost {
     let mut generation_egraph = EGraphVerilogGeneration::default();
     let root = generation_egraph.add_expr(&expr.parse().unwrap());
-    let get_name       = |i: &Id| generation_egraph[*i].data.0.clone();
+    let get_name = |i: &Id| generation_egraph[*i].data.0.clone();
     let mut expr_cost = Cost{dsp: 0, lut: 0};
 
     let mut module_body = String::default();
 
     for class in generation_egraph.classes() {
         let node = &class.nodes[0];
+
         let node_cost = cost_node(node, &generation_egraph);
         expr_cost = expr_cost + node_cost;
+
         match node {
             BitLanguage::Symbol(_) | BitLanguage::Num(_) => (),
             _ => module_body.push_str(&format!("wire [{}:0] {};\n", class.data.1 - 1, class.data.0)),
@@ -147,9 +144,6 @@ fn bitlanguage_to_name(enode: &BitLanguage) -> String {
         BitLanguage::MulNW(_)  => String::from("mulnw"),
         BitLanguage::Lsl(_)  => String::from("lsl"),
         BitLanguage::Num(_x)  => String::from("num"),
-        // _                    => {
-        //     println!("Paniced: {}", enode);
-        //     String::from("panic")}
     }
 }
 

@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
     let cbc_timeout = 300.0;
 
     println!("Hello, world!");
-    fs::remove_dir_all("./output")?;
+    fs::remove_dir_all("./output").ok();
     fs::create_dir_all("./output")?;
     fs::create_dir_all("./output/verilog")?;
     let input;

@@ -3,6 +3,9 @@ use std::collections::{HashMap,HashSet};
 use crate::utils::{fpga, language::*};
 use crate::EGraphVerilogGeneration;
 
+// this is cringe, i dont know how to avoid unsafe {} for global static mutables
+// it seems like a bad idea to have an interface like this because caller doesnt know its unsafe inside
+// this just removes the globalness of ALPHA - but the function is basically global anyway
 pub fn alpha(val : Option<f64>) -> f64 {
     static mut ALPHA : f64 = 0.0;
     match val {
@@ -25,6 +28,7 @@ pub struct FPGACostFunction<'a> {
     pub seen_nodes: HashSet<String>,
 }
 
+// this is useless basically
 impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     type Cost = fpga::Cost;
     fn cost<C>(&mut self, enode: &BitLanguage, mut costs: C) -> Self::Cost
@@ -81,6 +85,7 @@ impl<'a> CostFunction<BitLanguage> for FPGACostFunction<'a> {
     }
 }
 
+
 impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
     fn node_cost(&mut self, egraph: &EGraph<BitLanguage, ()>, _eclass: Id, enode: &BitLanguage) -> f64
     {
@@ -133,6 +138,8 @@ impl<'a> LpCostFunction<BitLanguage, ()> for FPGACostFunction<'a> {
     }
 }
 
+// smell from repeat of implemented CostFunction
+// should really have one version of node costing and smaller versions of the functions above :///
 pub fn cost_node(enode: &BitLanguage,
                     egraph: &EGraphVerilogGeneration)
                  -> fpga::Cost {
@@ -167,6 +174,7 @@ pub fn cost_node(enode: &BitLanguage,
 
 }
 
+// 
 pub fn mul_cost(width : i32) -> fpga::Cost {
     let mul_costs : HashMap<i32, fpga::Cost> = HashMap::from([
         (1, fpga::Cost{dsp: 0, lut: 1}),

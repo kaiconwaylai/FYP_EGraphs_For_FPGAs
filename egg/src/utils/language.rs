@@ -1,5 +1,11 @@
 use egg::*;
 
+// meat here are all the dynamic rewrites
+// a lot of repetition within in each one which could maybe be improved
+// add a helper function that returns slices from vector input of ranges for both inputs
+// i.e. fn generate_slices(Vec<i32, i32> in1, Vec<i32,i32> in2) -> (Vec<String>, Vec<String>);
+
+
 define_language! {
     pub enum BitLanguage {
         "+" = Add([Id; 2]),
@@ -129,7 +135,6 @@ impl Applier<BitLanguage, ()> for SliceRewrite {
         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
         rule_name: Symbol,
     ) -> Vec<Id> {
-        //Id's of the class containing the operators bitwidth
         let bw_id = subst.get(self.bw).unwrap();
         let mut bw_val : i32 = 0;
 

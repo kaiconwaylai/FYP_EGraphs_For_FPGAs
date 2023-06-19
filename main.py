@@ -63,6 +63,7 @@ def main():
                 with open('data.csv', 'a') as ostream:
                     ostream.write("Failed tests for bitwidth: {}\n".format(bw))
                     ostream.write("More information in ./verilog_testbench/failed_testing.txt")
+                    print("Error. Failed Testbench")
                     break;
             run_synth()
             

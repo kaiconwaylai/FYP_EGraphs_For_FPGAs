@@ -48,7 +48,6 @@ private:
 class Output : public Register {
 public:
     Output(std::string n, int width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
-
     std::string getValue();
 private:
     std::string rawOutput;

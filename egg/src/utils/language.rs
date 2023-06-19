@@ -48,9 +48,7 @@ pub fn make_rules() -> Vec<Rewrite<BitLanguage, ()>> {
         ]
 }
 
-//-----------------------------------------------------------------------------------
-// DYNAMIC REWRITE CALCULATIONS
-//-----------------------------------------------------------------------------------
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KaratsubaExpand {
     bw: Var,
@@ -65,7 +63,6 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
         rule_name: Symbol,
     ) -> Vec<Id> {
-        //Id's of the class containing the operators bitwidth
         let bw_id = subst.get(self.bw).unwrap();
         let mut bw_val : i32 = 0;
 
@@ -95,12 +92,15 @@ impl Applier<BitLanguage, ()> for KaratsubaExpand {
                 z1 = format!("(+ {add_width} (* {hi_width} {lo_width} {xhi} {ylo}) (* {lo_width} {hi_width} {xlo} {yhi}))", 
                 add_width = bw_val+1, hi_width = msb-lsb+1, lo_width = bw_val/2);
             } else {
-                z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))", add_width = bw_val+1, mul_width = bw_val/2);
+                z1 = format!("(+ {add_width} (* {mul_width} {xhi} {ylo}) (* {mul_width} {xlo} {yhi}))",
+                                add_width = bw_val+1, mul_width = bw_val/2);
             }
         } else {            
-            z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})", sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
+            z1 = format!("(- {sub_width} (- {sub_width} (* {mul_bw} (+ {add_width} {xlo} {xhi}) (+ {add_width} {ylo} {yhi})) {z2}) {z0})",
+                             sub_width = bw_val+1, add_width = (bw_val - bw_val/2)+1, mul_bw  = (bw_val - bw_val/2)+1);
         }
-        karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))", _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); 
+        karatsuba_string = format!("(concat (+ {add_width} (concat {z2} (slice {z0} {_msb} {half_bw})) {z1}) (slice {z0} {half_z0} 0))",
+                                         _msb = 2*(bw_val/2)-1, half_z0 = (bw_val/2)-1, add_width = 1 + bw_val * 3/2, half_bw = bw_val/2); 
 
         let (from, did_something) = egraph.union_instantiations(
             &"(* ?bw ?x ?y)".parse().unwrap(),
@@ -245,87 +245,85 @@ impl Applier<BitLanguage, ()> for DifferentBW {
 }
 
 
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// pub struct TilingRewrite {
-// }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TilingRewrite {
+}
 
-// impl Applier<BitLanguage, ()> for TilingRewrite {
-//     fn apply_one(
-//         &self,
-//         egraph: &mut EGraph<BitLanguage, ()>,
-//         _matched_id: Id,
-//         subst: &Subst,
-//         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
-//         rule_name: Symbol,
-//     ) -> Vec<Id> {
-                
+impl Applier<BitLanguage, ()> for TilingRewrite {
+    fn apply_one(
+        &self,
+        egraph: &mut EGraph<BitLanguage, ()>,
+        _matched_id: Id,
+        subst: &Subst,
+        _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+        rule_name: Symbol,
+    ) -> Vec<Id> {
+            
+        let x_1 = format!("(slice ?x 5 0)"); 
+        let x_2 = format!("(slice ?x 31 6)"); 
 
-//                 let x_1 = format!("(slice ?x 5 0)"); 
-//                 let x_2 = format!("(slice ?x 31 6)"); 
+        let y_1 = format!("(slice ?y 8 0)"); 
+        let y_2 = format!("(slice ?y 31 9)"); 
+        let y_3 = format!("(slice ?y 17 0)"); 
+        let y_4 = format!("(slice ?y 31 18)"); 
 
-//                 let y_1 = format!("(slice ?y 8 0)"); 
-//                 let y_2 = format!("(slice ?y 31 9)"); 
-//                 let y_3 = format!("(slice ?y 17 0)"); 
-//                 let y_4 = format!("(slice ?y 31 18)"); 
+        let z0 = format!("(* 6 9 {x_1} {y_1})");
+        let z1 = format!("(* 6 23 {x_1} {y_2})");
+        let z2 = format!("(* 26 18 {x_2} {y_3})");
+        let z3 = format!("(* 26 14 {x_2} {y_4})");
 
-//                 let z0 = format!("(* 6 9 {x_1} {y_1})");
-//                 let z1 = format!("(* 6 23 {x_1} {y_2})");
-//                 let z2 = format!("(* 26 18 {x_2} {y_3})");
-//                 let z3 = format!("(* 26 14 {x_2} {y_4})");
+        let rewrite = format!("(+ 65 (<< 24 {z3}) (+ 51 (<< 6 {z2}) (+ 39 (<< 9 {z1}) {z0})))");
 
-//                 let rewrite = format!("(+ 65 (<< {z3} 24) (+ 51 (<< {z2} 6) (+ 39 (<< {z1} 9) {z0})))");
-//         }
-//         let (from, did_something) = egraph.union_instantiations(
-//             &"(* ?bw1 ?bw2 ?x ?y)".parse().unwrap(),
-//             &rewrite.parse().unwrap(),
-//             subst,
-//             rule_name.clone(),
-//         );
-//         if did_something {
-//             return vec![from];
-//         }
-//         vec![]
-//     }
-// }
+        let (from, did_something) = egraph.union_instantiations(
+            &"(* 32 ?x ?y)".parse().unwrap(),
+            &rewrite.parse().unwrap(),
+            subst,
+            rule_name.clone(),
+        );
+        if did_something {
+            return vec![from];
+        }
+        vec![]
+    }
+}
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TilingRewrite2 {
+}
+impl Applier<BitLanguage, ()> for TilingRewrite2 {
+    fn apply_one(
+        &self,
+        egraph: &mut EGraph<BitLanguage, ()>,
+        _matched_id: Id,
+        subst: &Subst,
+        _searcher_pattern: Option<&PatternAst<BitLanguage>>,
+        rule_name: Symbol,
+    ) -> Vec<Id> {
+        let x_1 = format!("(slice ?x 5 0)"); 
+        let x_2 = format!("(slice ?x 31 6)"); 
 
-// impl Applier<BitLanguage, ()> for TilingRewrite_2 {
-//     fn apply_one(
-//         &self,
-//         egraph: &mut EGraph<BitLanguage, ()>,
-//         _matched_id: Id,
-//         subst: &Subst,
-//         _searcher_pattern: Option<&PatternAst<BitLanguage>>,
-//         rule_name: Symbol,
-//     ) -> Vec<Id> {
-                
+        let y_1 = format!("(slice ?y 7 0)"); 
+        let y_2 = format!("(slice ?y 15 8)"); 
+        let y_3 = format!("(slice ?y 23 16)"); 
+        let y_4 = format!("(slice ?y 31 24)"); 
 
-//                 let x_1 = format!("(slice ?x 5 0)"); 
-//                 let x_2 = format!("(slice ?x 31 6)"); 
+        let z0 = format!("(* 26 32 {x_2} ?y)");
+        let z1 = format!("(* 6 8 {x_1} {y_1})");
+        let z2 = format!("(* 6 8 {x_1} {y_2})");
+        let z3 = format!("(* 6 8 {x_1} {y_3})");
+        let z4 = format!("(* 6 8 {x_1} {y_4})");
 
-//                 let y_1 = format!("(slice ?y 7 0)"); 
-//                 let y_2 = format!("(slice ?y 15 8)"); 
-//                 let y_3 = format!("(slice ?y 23 16)"); 
-//                 let y_4 = format!("(slice ?y 31 24)"); 
-
-//                 let z0 = format!("(* 26 32 {x_1} ?y)");
-//                 let z1 = format!("(* 6 8 {x_1} {y_1})");
-//                 let z2 = format!("(* 6 8 {x_1} {y_2})");
-//                 let z3 = format!("(* 6 8 {x_1} {y_3})");
-//                 let z4 = format!("(* 6 8 {x_1} {y_4})");
-
-//                 let rewrite = format!("(+ 64 {z0} (+ 39 (<< {z4} 24) (+ 31 (<< {z3} 16) (+ 23 (<< {z2} 8) {z0}))) )");
-//         }
+        let rewrite = format!("(+ 64 (<< 6 {z0}) (+ 39 (<< 24 {z4}) (+ 31 (<< 16 {z3}) (+ 23 (<< 8 {z2}) {z1}))) )");
         
-//         let (from, did_something) = egraph.union_instantiations(
-//             &"(* ?bw1 ?bw2 ?x ?y)".parse().unwrap(),
-//             &rewrite.parse().unwrap(),
-//             subst,
-//             rule_name.clone(),
-//         );
-//         if did_something {
-//             return vec![from];
-//         }
-//         vec![]
-//     }
-// }
+        let (from, did_something) = egraph.union_instantiations(
+            &"(* 32 ?x ?y)".parse().unwrap(),
+            &rewrite.parse().unwrap(),
+            subst,
+            rule_name.clone(),
+        );
+        if did_something {
+            return vec![from];
+        }
+        vec![]
+    }
+}

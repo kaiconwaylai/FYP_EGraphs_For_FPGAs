@@ -19,25 +19,23 @@ fn main() -> std::io::Result<()> {
 
     let runner_iteration_limit = 10000000;
     let egraph_node_limit = 25000000000;
-    let iterations = 10;
-    let step = 1.0/10.0;
+    let iterations = 1000;
+    let step = 1.0/1000.0;
     let cbc_timeout = 300.0;
 
     println!("Hello, world!");
+    fs::remove_dir_all("./output")?;
     fs::create_dir_all("./output")?;
-    fs::remove_dir_all("./output/verilog")?;
     fs::create_dir_all("./output/verilog")?;
     let input;
     unsafe {
         input = format!("(* {INPUT_BW} IN1 IN2)");
     }
     
-    let mut results = fs::File::create("./output/results.txt")?;
-    let mut costs = fs::OpenOptions::new()
+    let mut results = fs::OpenOptions::new()
                         .write(true)
                         .create(true)
-                        .append(true)
-                        .open("./output/costs.txt")?;
+                        .open("./output/results.txt")?;
 
     let expr: RecExpr<BitLanguage> = input.parse().unwrap();
 
@@ -70,9 +68,7 @@ fn main() -> std::io::Result<()> {
                 cost = generate_verilog(&best, INPUT_BW, &dst);
             }
             write!(results, "Alpha = {}. Cost: LUTs = {}. DSPs = {}. \n\n", alpha(None), cost.lut, cost.dsp)?;
-            unsafe {
-                writeln!(costs, "{},{},{}", INPUT_BW, cost.lut, cost.dsp)?;
-            }
+
         }
 
         if best == input {

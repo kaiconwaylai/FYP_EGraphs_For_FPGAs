@@ -37,7 +37,6 @@ int main(int argc, char **argv) {
 #endif
    simengine_libname += lib_extension;
 
-   // std::string design_libname = getcurrentdir() + "/xsim.dir/counter/xsimk" + lib_extension;
    std::string design_libname = "xsim.dir/mult/xsimk";
    design_libname = design_libname + lib_extension;
 
@@ -65,6 +64,7 @@ int main(int argc, char **argv) {
 
       std::cout << "\n *** START TESTING ***\n";
 
+      //Unit Tests
       for(const auto& testcase : testCases) {
          IN1.setValue(testcase.IN1);
          IN2.setValue(testcase.IN2);
@@ -79,11 +79,12 @@ int main(int argc, char **argv) {
          testsCompleted++; testsPassed++;
       }
 
+      //Randomised Tests
       for(int i = 0; i < 45; i++) {
          IN1.randomiseValue();
          IN2.randomiseValue();
          auto expected = multiply(IN1, IN2);
-         XSI.run(1000);
+         XSI.run(100);
          auto res = OUTPUT.getValue();
          if(res != expected) {
             std::cout << "TEST FAILED \n";

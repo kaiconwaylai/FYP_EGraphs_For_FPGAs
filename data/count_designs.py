@@ -7,27 +7,6 @@ from collections import Counter, defaultdict
 def main():
 
     data = pd.read_csv('small_Steps.csv')
-    
-    bw = 32
-    # with open('newdadad.txt', 'w') as fs:
-    #     for group in data.groupby(['WIDTH'])['DSPs'].apply(list):
-    #         #print(group)
-    #         dsps = list(dict.fromkeys(group))
-    #         dsps.sort()
-    #         lowest = dsps[0]
-    #         highest = dsps[-1]
-    #         count = len(dsps)
-    #         dsps = [dsps[n]/highest for n in range(0,len(dsps))]
-            
-    #         # diffs = [dsps[n]-dsps[n-1] for n in range(1,len(dsps))]
-    #         # score = 0.
-    #         # for x in diffs:
-    #         #     score += (x/highest)**2
-    #         # score = score/(1.0/(count-1.0))
-            
-    #         # fs.write("{} , {}\n".format(bw, score))
-    #         # bw += 1
-
     dict = {}
     x = data[['WIDTH','LUTs', 'DSPs']].groupby(['WIDTH'])
     for name, grouped in x:
@@ -63,5 +42,55 @@ def main():
     # ax.set_ylabel('LUTs')
     
     plt.show()
+    
+def main2():
+    norm = pd.read_csv('32-256.csv')
+    small = pd.read_csv('small_Steps.csv')
+    costs = pd.read_csv('costs.txt')
+
+    dic1 = {}
+    dic2 = {}
+    dic3 = {}
+    
+    default_512 = (24230,900)
+    default_1024 = (1065019,0)
+    
+    for diction, df in [(dic1,norm), (dic2, small), (dic3, costs)]:
+        x = df[['WIDTH','LUTs', 'DSPs']].groupby(['WIDTH'])
+        for name, grouped in x:
+            lst = []
+            for _,y in grouped.iterrows():
+                lst.append((y['LUTs'], y['DSPs']))
+            diction[name[0]] = lst
+    
+    for bw in [512,1024]:
+        normal = dic1[bw];         
+        normal.sort(key = lambda i:i[1])
+        more = dic2[bw]; more.sort(key = lambda i:i[1])
+        cos = dic3[bw]; cos.sort(key = lambda i:i[1])
+    
+        plt.figure(bw)
+        plt.xlabel('DSPs', fontsize=10)
+        plt.ylabel('LUTs', fontsize=10)
+        
+        l1, d1 = zip(*normal)
+        l2, d2 = zip(*more)
+        l3, d3 = zip(*cos)
+        
+        plt.plot(d1, l1, label = 'Default Alpha', marker='s')
+        plt.plot(d2, l2, label = 'Small Alpha', marker='.')
+        plt.plot(d3, l3, label = 'Cost Model', marker='x')
+        if bw == 512:
+            plt.plot(900, 24230, label = 'Default Multiplier', marker='D')
+        elif bw == 1024:
+            plt.plot(0, 1065019, label = 'Default Multiplier', marker='D')
+            
+        #plt.plot(d1[-1], l1[-1], label='Default Multiplier', marker='D')
+        plt.legend()
+
+    plt.show()
+        
+        
+    
 if __name__ == "__main__":
-    main()
+    main2()

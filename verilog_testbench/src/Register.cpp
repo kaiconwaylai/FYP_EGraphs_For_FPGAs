@@ -118,6 +118,11 @@ std::string logic_val_to_string(s_xsi_vlog_logicval* value, int size)
    return retVal;
 }
 
+// typedef struct t_xsi_vlog_logicval {
+//     XSI_UINT32 aVal;
+//     XSI_UINT32 bVal;
+// } s_xsi_vlog_logicval, *p_xsi_vlog_logicval;
+
 std::string Output::getValue() {
     unsigned arraySize = std::ceil(width/32.0);
     std::vector<s_xsi_vlog_logicval> outputVal(arraySize,{0,0});

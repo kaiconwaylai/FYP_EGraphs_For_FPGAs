@@ -31,11 +31,15 @@ def main():
             if (IN1, IN2) in mySet or (IN2, IN1) in mySet:
                 continue 
             mySet.add((IN1, IN2))
+            
             default_multiply.set_variables(IN1_WIDTH = IN1, IN2_WIDTH = IN2)
             default_multiply.write_code('tmp/mult.v')
+            
             run_vivado()
+            
             LUTs, DSPs = extract_data('tmp/synth.xml')
             print("Width:{}, LUTS:{}, DSPs:{}".format(IN1,LUTs,DSPs))
+            
             data.append([IN2, IN1, LUTs, DSPs])
             with open('data.csv', 'a') as os:
                 writer = csv.writer(os)

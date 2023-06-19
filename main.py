@@ -100,7 +100,7 @@ def main():
             
         fs.write("Total test time: {}\n".format(total_test))
         fs.write("Total synth time: {}\n".format(total_synth))
-        fs.write("Non synth / test / egg time: {}\n".format(prog_time-total_test-total_synth-total_egg)
+        fs.write("Non synth / test / egg time: {}\n".format(prog_time-total_test-total_synth-total_egg))
 
 
 def make_top_level(path):

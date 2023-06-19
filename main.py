@@ -44,7 +44,6 @@ def extract_data(path):
     return int(LUTs), int(DSPs)
 
 def main():
-    start_prog = time.time()
     if not os.path.exists('./tmp'):
         os.mkdir('tmp')
         
@@ -60,6 +59,11 @@ def main():
             shutil.copyfile(fname, tb_v_src)
             shutil.copyfile(fname, synthesis_v_src)
             run_testing(bw)
+            if os.path.exists('./verilog_testbench/failed_testing.txt'):
+                with open('data.csv', 'a') as ostream:
+                    ostream.write("Failed tests for bitwidth: {}".format(bw))
+                    ostream.write("More information in ./verilog_testbench/failed_testing.txt")
+                    break;
             run_synth()
             
             luts, dsps = extract_data('tmp/synth.xml')

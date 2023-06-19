@@ -61,7 +61,7 @@ def main():
             run_testing(bw)
             if os.path.exists('./verilog_testbench/failed_testing.txt'):
                 with open('data.csv', 'a') as ostream:
-                    ostream.write("Failed tests for bitwidth: {}".format(bw))
+                    ostream.write("Failed tests for bitwidth: {}\n".format(bw))
                     ostream.write("More information in ./verilog_testbench/failed_testing.txt")
                     break;
             run_synth()

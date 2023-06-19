@@ -19,6 +19,7 @@
 call del /F /Q xsim.dir
 call del *.o
 call del run_xsim.exe
+call del failed_testing.txt
 
 call set install_root="C:\Xilinx\Vivado\2020.2"
 

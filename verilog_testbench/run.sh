@@ -16,6 +16,7 @@ OUT_EXE="run_sim"
 
 # Start clean
 rm -rf xsim.dir xsim.log xelab* $OUT_EXE
+rm failed_testing.txt
 
 # Compile the HDL design into a simulatable Shared Library
 /mnt/applications/Xilinx/20.1/Vivado/2020.1/bin/xelab work.mult -prj mult.prj -dll -s mult -debug wave

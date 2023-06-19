@@ -11,7 +11,7 @@ egg_exe = cur_dir + "/egg/run_egg.sh"
 egg_output = cur_dir + "/egg/output/verilog"
 tb_exe = cur_dir + "/verilog_testbench/run.sh"
 tb_v_src = cur_dir + "/verilog_testbench/mult.v"
-synthesise = cur_dir + "/python/run_tcl.sh"
+synthesise = cur_dir + "/run_tcl.sh"
 synthesis_v_src = "./tmp/mult.v"
 
 def run_egg(bw):

@@ -63,7 +63,7 @@ def main2():
                 lst.append((y['LUTs'], y['DSPs']))
             diction[name[0]] = lst
     
-    for bw in [512,1024]:
+    for bw in [1024]:
         normal = dic1[bw];         
         normal.sort(key = lambda i:i[1])
         more = dic2[bw]; more.sort(key = lambda i:i[1])
@@ -83,7 +83,8 @@ def main2():
         if bw == 512:
             plt.plot(900, 24230, label = 'Default Multiplier', marker='D')
         elif bw == 1024:
-            plt.plot(0, 1065019, label = 'Default Multiplier', marker='D')
+            #plt.plot(0, 1065019, label = 'Default Multiplier', marker='D')
+            a = 1
             
         #plt.plot(d1[-1], l1[-1], label='Default Multiplier', marker='D')
         plt.legend()

@@ -19,7 +19,7 @@ fn main() -> std::io::Result<()> {
 
     let runner_iteration_limit = 10000000;
     let egraph_node_limit = 25000000000;
-    let step = 1.0/1000.0;
+    let step = 1.0/10000.0;
     let iterations = (1.0/step) as i32;
     let cbc_timeout = 300.0;
 

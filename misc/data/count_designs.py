@@ -77,16 +77,16 @@ def main2():
         l2, d2 = zip(*more)
         l3, d3 = zip(*cos)
         
-        plt.plot(d1, l1, label = 'Default Alpha', marker='s')
-        plt.plot(d2, l2, label = 'Small Alpha', marker='.')
+        plt.plot(d1, l1, label = 'Default Step', marker='s')
+        plt.plot(d2, l2, label = 'Step = 1/10000', marker='.')
         plt.plot(d3, l3, label = 'Cost Model', marker='x')
         if bw == 512:
             plt.plot(900, 24230, label = 'Default Multiplier', marker='D')
-        elif bw == 1024:
+        elif bw < 1000:
             #plt.plot(0, 1065019, label = 'Default Multiplier', marker='D')
+            plt.plot(d1[-1], l1[-1], label='Default Multiplier', marker='D')
             a = 1
             
-        #plt.plot(d1[-1], l1[-1], label='Default Multiplier', marker='D')
         plt.legend()
 
     plt.show()

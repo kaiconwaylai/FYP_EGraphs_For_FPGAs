@@ -10,7 +10,7 @@
 class Register {
 public:
 
-    Register(std::string n, int wdt, Xsi::Loader* ldr) : name(n), width(wdt), loader(ldr) {
+    Register(std::string portName, unsigned _width, Xsi::Loader* ldr) : name(portName), width(_width), loader(ldr) {
         port = loader->get_port_number(name.c_str());
         if(port < 0) {
           std::cerr << "ERROR: Port " << name << " not found" << std::endl;
@@ -35,7 +35,7 @@ protected:
 
 class Input : public Register {
 public:
-    Input(std::string n, int width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
+    Input(std::string n, unsigned width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
 
     void setValue(unsigned val);
     void setValue(const std::string& val);
@@ -47,7 +47,7 @@ private:
 
 class Output : public Register {
 public:
-    Output(std::string n, int width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
+    Output(std::string n, unsigned width, Xsi::Loader* ldr) : Register(n, width, ldr) {};
     std::string getValue();
 };
 
